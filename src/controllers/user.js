@@ -1,15 +1,11 @@
-/* eslint-disable no-unused-vars */
 const User = require('../models/user')
+const asyncMiddleware = require('../middlewares/asyncMiddleware')
 
-const signUp = async (req, res) => {
+const signUp = asyncMiddleware(async (req, res) => {
   const user = new User(req.body)
-  try {
-    await user.save()
-    res.status(201).send({ user })
-  } catch (e) {
-    res.status(401).send(e)
-  }
-}
+  await user.save()
+  res.status(201).send({ user })
+}, 400)
 
 module.exports = {
   signUp,
