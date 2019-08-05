@@ -4,6 +4,7 @@
   "description": "Just a practice backend server project to play around with some cool Node.js features.",
   "main": "index.js",
   "scripts": {
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -16,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/hagopj13/task-manager/issues"
   },
-  "homepage": "https://github.com/hagopj13/task-manager#readme"
+  "homepage": "https://github.com/hagopj13/task-manager#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
