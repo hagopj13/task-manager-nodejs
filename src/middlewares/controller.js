@@ -1,6 +1,6 @@
 const boom = require('boom');
 
-const asyncMiddleware = (fn, defaultCode) => (req, res, next) => {
+const asyncController = (fn, defaultCode) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch((err) => {
     if (!err.isBoom) {
       const statusCode = defaultCode || 500
@@ -10,4 +10,4 @@ const asyncMiddleware = (fn, defaultCode) => (req, res, next) => {
   });
 }
 
-module.exports = asyncMiddleware
+module.exports = asyncController

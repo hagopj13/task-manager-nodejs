@@ -1,7 +1,7 @@
 const express = require('express')
 require('./db/mongoose')
 
-const userRoute = require('./routes/user')
+const userRoute = require('./routes/user.route')
 const errorHandler = require('./middlewares/errorHandler')
 
 const app = express()
