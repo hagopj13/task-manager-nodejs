@@ -40,14 +40,14 @@ const userSchema = mongoose.Schema({
   timestamps: true,
 })
 
-userSchema.methods.toJSON = function () {
+userSchema.methods.toJSON = function toJSON() {
   const user = this
   const userObj = user.toObject()
   delete userObj.password
   return userObj
 }
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function preSave(next) {
   const user = this
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8)
