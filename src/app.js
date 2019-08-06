@@ -1,12 +1,13 @@
 const express = require('express')
 require('./db/mongoose')
-
-const userRoute = require('./routes/user.route')
+const routes = require('./routes/v1')
 const errorHandler = require('./middlewares/errorHandler')
 
 const app = express()
+
 app.use(express.json())
-app.use(userRoute)
+
+app.use('/v1', routes)
 
 app.use(errorHandler)
 
