@@ -1,4 +1,5 @@
 const Boom = require('boom');
+const { env } = require('../config/config');
 
 const errorConverter = (err, req, res, next) => {
   let error = err;
@@ -17,6 +18,11 @@ const errorHandler = (err, req, res, next) => {
 
   const { statusCode: status, error, message } = err.output.payload;
   const response = { status, error, message };
+
+  if (env === 'development') {
+    response.stack = err.stack;
+  }
+
   res.set('Content-Type', 'application/json');
   res.status(status).send(response);
   next(error);
