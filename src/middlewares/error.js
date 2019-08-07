@@ -22,7 +22,12 @@ const errorHandler = (err, req, res, next) => {
   next(error);
 };
 
+const notFoundError = (req, res, next) => {
+  next(Boom.notFound());
+};
+
 module.exports = {
   errorConverter,
   errorHandler,
+  notFoundError,
 };
