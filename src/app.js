@@ -5,7 +5,11 @@ const cors = require('cors');
 const methodOverride = require('method-override');
 require('./db/mongoose');
 const routes = require('./routes/v1');
-const { errorConverter, errorHandler, notFoundError } = require('./middlewares/error');
+const {
+  errorConverter,
+  errorHandler,
+  notFoundError,
+} = require('./middlewares/error');
 
 const app = express();
 
