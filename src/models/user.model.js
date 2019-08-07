@@ -1,6 +1,6 @@
-const mongoose = require('mongoose')
-const validator = require('validator')
-const bcrypt = require('bcryptjs')
+const mongoose = require('mongoose');
+const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const userSchema = mongoose.Schema({
   name: {
@@ -16,7 +16,7 @@ const userSchema = mongoose.Schema({
     lowercase: true,
     validate(value) {
       if (!validator.isEmail(value)) {
-        throw new Error('Invalid email')
+        throw new Error('Invalid email');
       }
     },
   },
@@ -27,7 +27,7 @@ const userSchema = mongoose.Schema({
     minlength: 7,
     validate(value) {
       if (value.toLowerCase().includes('password')) {
-        throw new Error('Password must not contain the word "password"')
+        throw new Error('Password must not contain the word "password"');
       }
     },
   },
@@ -38,24 +38,24 @@ const userSchema = mongoose.Schema({
   },
 }, {
   timestamps: true,
-})
+});
 
 userSchema.methods.toJSON = function toJSON() {
-  const user = this
-  const userObj = user.toObject()
-  delete userObj.password
-  return userObj
-}
+  const user = this;
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+};
 
 userSchema.pre('save', async function preSave(next) {
-  const user = this
+  const user = this;
   if (user.isModified('password')) {
-    user.password = await bcrypt.hash(user.password, 8)
+    user.password = await bcrypt.hash(user.password, 8);
   }
 
-  next()
-})
+  next();
+});
 
-const user = mongoose.model('User', userSchema)
+const user = mongoose.model('User', userSchema);
 
-module.exports = user
+module.exports = user;

@@ -7,7 +7,8 @@
     "start": "node src/index.js",
     "dev": "env-cmd -f config/.env.dev nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",

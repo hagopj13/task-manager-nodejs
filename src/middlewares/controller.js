@@ -2,10 +2,10 @@ const asyncController = (fn, defaultCode) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch((err) => {
     if (!err.isBoom && !err.statusCode) {
       // eslint-disable-next-line no-param-reassign
-      err.statusCode = defaultCode || 500
+      err.statusCode = defaultCode || 500;
     }
-    next(err)
-  })
-}
+    next(err);
+  });
+};
 
-module.exports = asyncController
+module.exports = asyncController;
