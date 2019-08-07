@@ -1,7 +1,7 @@
 const express = require('express')
 require('./db/mongoose')
 const routes = require('./routes/v1')
-const errorHandler = require('./middlewares/errorHandler')
+const { errorHandler } = require('./middlewares/error')
 
 const app = express()
 
