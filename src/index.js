@@ -1,7 +1,7 @@
 const { port } = require('./config/config');
+const logger = require('./config/logger');
 const app = require('./app');
 
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Listening to port ${port}`);
+  logger.info(`Listening to port ${port}`);
 });

@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/hagopj13/task-manager-nodejs#readme",
   "dependencies": {
+    "app-root-path": "^2.2.1",
     "bcryptjs": "^2.4.3",
     "boom": "^7.3.0",
     "compression": "^1.7.4",
@@ -35,8 +36,11 @@
     "method-override": "^3.0.0",
     "mongodb": "^3.3.0-beta2",
     "mongoose": "^5.6.8",
+    "morgan": "^1.9.1",
     "prettier": "^1.18.2",
-    "validator": "^11.1.0"
+    "validator": "^11.1.0",
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^3.10.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.1.0",

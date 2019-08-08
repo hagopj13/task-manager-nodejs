@@ -1,5 +1,7 @@
+/* eslint no-unused-vars: 0 */
 const Boom = require('boom');
 const { env } = require('../config/config');
+const logger = require('../config/logger');
 
 const errorConverter = (err, req, res, next) => {
   let error = err;
@@ -25,15 +27,24 @@ const errorHandler = (err, req, res, next) => {
 
   res.set('Content-Type', 'application/json');
   res.status(status).send(response);
-  next(error);
+  next(err);
 };
 
 const notFoundError = (req, res, next) => {
   next(Boom.notFound());
 };
 
+const errorLogger = (err, req, res, next) => {
+  const { statusCode, message } = err.output.payload;
+  const { ip, method, originalUrl } = req;
+  let errorLog = env !== 'development' ? `${ip} - ` : '';
+  errorLog += `${method} ${originalUrl} - ${statusCode} ${message}`;
+  logger.error(errorLog);
+};
+
 module.exports = {
   errorConverter,
   errorHandler,
   notFoundError,
+  errorLogger,
 };
