@@ -1,5 +1,5 @@
 # Convert text file line endings to lf
-* text=auto
+* text eol=lf
 *.js text
 # Denote all files that are truly binary and should not be modified.
 *.mp4 binary
