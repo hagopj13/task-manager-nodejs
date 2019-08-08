@@ -10,7 +10,6 @@ const envirnomentVariables = {
   env: process.env.NODE_ENV,
   port: process.env.PORT,
   mongodbUrl: process.env.MONDODB_URL,
-  morganFormat: process.env.NODE_ENV === 'development' ? 'dev' : 'short',
 };
 
 module.exports = envirnomentVariables;

@@ -5,17 +5,9 @@ const fs = require('fs');
 const { env } = require('./config');
 
 const logDir = `${appRoot}/logs/`;
-const isDevelopmentMode = env === 'development';
-
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
 }
-
-const fileTransportCommonOptions = {
-  datePattern: 'YYYY-MM-DD',
-  handleExceptions: true,
-  silent: isDevelopmentMode,
-};
 
 const consoleTransport = new transports.Console({
   level: 'debug',
@@ -25,6 +17,12 @@ const consoleTransport = new transports.Console({
   ),
   handleExceptions: true,
 });
+
+const fileTransportCommonOptions = {
+  datePattern: 'YYYY-MM-DD',
+  handleExceptions: true,
+  silent: env !== 'production',
+};
 
 const combinedFileTransport = new transports.DailyRotateFile({
   level: 'info',
@@ -39,7 +37,7 @@ const errorsFileTransport = new transports.DailyRotateFile({
 });
 
 const logger = createLogger({
-  level: isDevelopmentMode ? 'debug' : 'info',
+  level: env === 'development' ? 'debug' : 'info',
   format: format.combine(
     format.timestamp({
       format: 'YYYY-MM-DD HH:mm:ss',
@@ -48,11 +46,5 @@ const logger = createLogger({
   ),
   transports: [consoleTransport, combinedFileTransport, errorsFileTransport],
 });
-
-logger.stream = {
-  write: message => {
-    logger.info(message);
-  },
-};
 
 module.exports = logger;

@@ -25,26 +25,19 @@ const errorHandler = (err, req, res, next) => {
     response.stack = err.stack;
   }
 
+  // put the error message in the res object for the logger
+  res.locals.errorMessage = message;
+
   res.set('Content-Type', 'application/json');
   res.status(status).send(response);
-  next(err);
 };
 
 const notFoundError = (req, res, next) => {
   next(Boom.notFound());
 };
 
-const errorLogger = (err, req, res, next) => {
-  const { statusCode, message } = err.output.payload;
-  const { ip, method, originalUrl } = req;
-  let errorLog = env !== 'development' ? `${ip} - ` : '';
-  errorLog += `${method} ${originalUrl} - ${statusCode} ${message}`;
-  logger.error(errorLog);
-};
-
 module.exports = {
   errorConverter,
   errorHandler,
   notFoundError,
-  errorLogger,
 };
