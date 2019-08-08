@@ -1,8 +1,8 @@
-const asyncController = (fn, defaultCode) => (req, res, next) => {
+const asyncController = (fn, defaultCode = 500) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(err => {
     const error = err;
     if (!error.isBoom && !error.statusCode) {
-      error.statusCode = defaultCode || 500;
+      error.statusCode = defaultCode;
     }
     next(error);
   });

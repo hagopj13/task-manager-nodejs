@@ -7,6 +7,7 @@ const errorConverter = (err, req, res, next) => {
   let error = err;
   if (!error.isBoom) {
     const statusCode = error.statusCode || 500;
+    res.locals.originalErrorMessage = error.message;
     error = new Boom(error, { statusCode });
   }
 
@@ -25,8 +26,7 @@ const errorHandler = (err, req, res, next) => {
     response.stack = err.stack;
   }
 
-  // put the error message in the res object for the logger
-  res.locals.errorMessage = message;
+  res.locals.errorMessage = status === 500 ? res.locals.originalErrorMessage : message;
 
   res.set('Content-Type', 'application/json');
   res.status(status).send(response);
