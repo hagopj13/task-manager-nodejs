@@ -4,7 +4,7 @@
   "description": "Just a practice backend server project to play around with some cool Node.js features.",
   "main": "index.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=production pm2 start src/index.js --name app --no-daemon",
+    "start": "cross-env NODE_ENV=production pm2 start ecosystem.config.js --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -42,8 +42,7 @@
     "pm2": "^3.5.1",
     "prettier": "^1.18.2",
     "validator": "^11.1.0",
-    "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.10.0"
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.1.0",
