@@ -26,7 +26,8 @@ const errorHandler = (err, req, res, next) => {
     response.stack = err.stack;
   }
 
-  res.locals.errorMessage = status === 500 ? res.locals.originalErrorMessage : message;
+  res.locals.errorMessage =
+    status === 500 && res.locals.originalErrorMessage ? res.locals.originalErrorMessage : message;
 
   res.set('Content-Type', 'application/json');
   res.status(status).send(response);

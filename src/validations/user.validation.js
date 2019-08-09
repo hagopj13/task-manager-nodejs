@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi');
 
 const register = {
-  body: {
+  body: Joi.object().keys({
     email: Joi.string()
       .email()
       .required(),
@@ -15,7 +15,7 @@ const register = {
     age: Joi.number()
       .integer()
       .min(0),
-  },
+  }),
 };
 
 module.exports = {
