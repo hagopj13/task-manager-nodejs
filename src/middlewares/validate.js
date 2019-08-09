@@ -1,4 +1,3 @@
-/* eslint consistent-return: 0 */
 const Joi = require('@hapi/joi');
 const Boom = require('boom');
 const { pick } = require('lodash');
