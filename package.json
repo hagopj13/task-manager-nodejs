@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/hagopj13/task-manager-nodejs#readme",
   "dependencies": {
+    "@hapi/joi": "^15.1.0",
     "app-root-path": "^2.2.1",
     "bcryptjs": "^2.4.3",
     "boom": "^7.3.0",
