@@ -4,7 +4,7 @@
   "description": "Just a practice backend server project to play around with some cool Node.js features.",
   "main": "index.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node src/index.js",
+    "start": "cross-env NODE_ENV=production pm2 start src/index.js --name app --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -39,6 +39,7 @@
     "mongodb": "^3.3.0-beta2",
     "mongoose": "^5.6.8",
     "morgan": "^1.9.1",
+    "pm2": "^3.5.1",
     "prettier": "^1.18.2",
     "validator": "^11.1.0",
     "winston": "^3.2.1",
