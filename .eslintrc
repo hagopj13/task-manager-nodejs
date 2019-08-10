@@ -5,6 +5,7 @@
   },
   "rules": {
     "no-console": "error",
-    "promise/no-callback-in-promise": "off"
+    "promise/no-callback-in-promise": "off",
+    "func-names": "off"
   }
 }
