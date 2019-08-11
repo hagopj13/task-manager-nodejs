@@ -1,5 +1,6 @@
 {
   "extends": ["airbnb-base", "plugin:prettier/recommended", "plugin:promise/recommended"],
+  "plugins": ["chai-friendly"],
   "env": {
     "node": true,
     "mocha": true
@@ -7,6 +8,9 @@
   "rules": {
     "no-console": "error",
     "promise/no-callback-in-promise": "off",
-    "func-names": "off"
+    "func-names": "off",
+    "no-underscore-dangle": "off",
+    "no-unused-expressions": "off",
+    "chai-friendly/no-unused-expressions": "error"
   }
 }

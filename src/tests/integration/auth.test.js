@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { expect } = require('chai');
 const request = require('supertest');
 const app = require('../../app');
+const User = require('../../models/user.model');
 const { setupUsers } = require('./fixtures');
 
 describe('Authentication API', () => {
@@ -33,6 +34,12 @@ describe('Authentication API', () => {
     it('should register new user when request data is ok', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(201);
+      delete newUser.password;
+      expect(response.body.user).to.include(newUser);
+
+      const dbUser = await User.findById(response.body.user._id);
+      expect(dbUser).to.be.ok;
+      expect(dbUser.password).not.to.be.equal(newUser.password);
     });
   });
 });
