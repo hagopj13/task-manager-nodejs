@@ -25,9 +25,7 @@ const errorHandler = (err, req, res, next) => {
   res.locals.errorMessage =
     status === 500 && res.locals.originalErrorMessage ? res.locals.originalErrorMessage : message;
 
-  if (!res.headersSent) {
-    res.status(status).send(response);
-  }
+  res.status(status).send(response);
 };
 
 const notFoundError = (req, res, next) => {
