@@ -6,6 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production pm2 start ecosystem.config.js --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
+    "test": "cross-env NODE_ENV=test mocha src/**/*.test.js --watch --recursive",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check src/**/*.js",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@commitlint/cli": "^8.1.0",
     "@commitlint/config-conventional": "^8.1.0",
+    "chai": "^4.2.0",
     "eslint": "^5.3.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-config-prettier": "^6.0.0",
@@ -55,6 +57,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "husky": "^3.0.2",
     "lint-staged": "^9.2.1",
+    "mocha": "^6.2.0",
     "nodemon": "^1.19.1"
   }
 }

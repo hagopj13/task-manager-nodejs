@@ -9,7 +9,8 @@ dotenv.load({
 const envirnomentVariables = {
   env: process.env.NODE_ENV,
   port: process.env.PORT,
-  mongodbUrl: process.env.MONDODB_URL,
+  mongodbUrl:
+    process.env.NODE_ENV === 'test' ? process.env.MONDODB_TEST_URL : process.env.MONDODB_URL,
 };
 
 module.exports = envirnomentVariables;
