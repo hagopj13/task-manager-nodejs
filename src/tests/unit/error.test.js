@@ -4,7 +4,7 @@ const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
 const { errorConverter } = require('../../middlewares/error');
 
-describe('Error tests', () => {
+describe('Error middleware tests', () => {
   describe('Error converter', () => {
     let req;
     let res;
