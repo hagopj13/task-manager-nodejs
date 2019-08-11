@@ -7,7 +7,7 @@ const errorConverter = (err, req, res, next) => {
   let error = err;
   if (!error.isBoom) {
     const statusCode = error.statusCode || 500;
-    res.locals.originalErrorMessage = error.message;
+    res.locals.originalErrorMessage = error.message || '';
     error = new Boom(error, { statusCode });
   }
 

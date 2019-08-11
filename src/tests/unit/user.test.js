@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { expect } = require('chai');
 const User = require('../../models/user.model');
 
-describe('user.model unit tests', () => {
+describe('User model unit tests', () => {
   after(() => {
     mongoose.models = {};
     mongoose.modelSchemas = {};
@@ -31,7 +31,7 @@ describe('user.model unit tests', () => {
       });
     };
 
-    it('should validate a validate user', done => {
+    it('should correctly validate a valid user', done => {
       validateUser(true, done);
     });
 
