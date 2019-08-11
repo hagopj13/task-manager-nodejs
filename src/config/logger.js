@@ -12,6 +12,7 @@ const logger = createLogger({
         format.printf(({ level, message }) => `${level}: ${message}`)
       ),
       handleExceptions: true,
+      silent: env === 'test',
     }),
   ],
 });

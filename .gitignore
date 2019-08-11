@@ -9,3 +9,7 @@ node_modules
 
 # exclude logs
 logs
+
+# exclude coverage files
+.nyc_output
+coverage

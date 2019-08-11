@@ -7,7 +7,9 @@
     "start": "cross-env NODE_ENV=production pm2 start ecosystem.config.js --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "test": "cross-env NODE_ENV=test mocha src/**/*.test.js --exit",
-    "test:watch": "cross-env NODE_ENV=test mocha src/**/*.test.js --watch --recursive",
+    "test:watch": "cross-env NODE_ENV=test mocha src/**/*.test.js --watch",
+    "coverage": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text mocha --exit src/**/*.test.js",
+    "coverage:show": "opn coverage/lcov-report/index.html",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check src/**/*.js",
@@ -61,6 +63,7 @@
     "lint-staged": "^9.2.1",
     "mocha": "^6.2.0",
     "nodemon": "^1.19.1",
+    "nyc": "^14.1.1",
     "supertest": "^4.0.2"
   }
 }

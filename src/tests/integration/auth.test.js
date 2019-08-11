@@ -4,6 +4,7 @@ const request = require('supertest');
 const app = require('../../app');
 const User = require('../../models/user.model');
 const { setupUsers } = require('./fixtures');
+const { userOne } = require('./fixtures/user.fixtures');
 
 describe('Authentication API', () => {
   beforeEach(async () => {
@@ -22,6 +23,7 @@ describe('Authentication API', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'White1234!',
+        age: 22,
       };
     });
 
@@ -40,6 +42,51 @@ describe('Authentication API', () => {
       const dbUser = await User.findById(response.body.user._id);
       expect(dbUser).to.be.ok;
       expect(dbUser.password).not.to.be.equal(newUser.password);
+    });
+
+    it('should return an error if email is invalid or missing', async () => {
+      newUser.email = 'notvalid';
+      const response1 = await exec();
+      expect(response1.status).to.be.equal(400);
+
+      delete newUser.email;
+      const response2 = await exec();
+      expect(response2.status).to.be.equal(400);
+    });
+
+    it('should return an error if email is already used', async () => {
+      newUser.email = userOne.email;
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
+    });
+
+    it('should return an error if password is invalid or missing', async () => {
+      newUser.password = 'Red1234!password';
+      const response1 = await exec();
+      expect(response1.status).to.be.equal(400);
+
+      delete newUser.password;
+      const response2 = await exec();
+      expect(response2.status).to.be.equal(400);
+    });
+
+    it('should return an error if name is missing', async () => {
+      delete newUser.name;
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
+    });
+
+    it('should return an error if age is less than 0', async () => {
+      newUser.age = -1;
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
+    });
+
+    it('should set the age by default to 0 if not given', async () => {
+      delete newUser.age;
+      const response = await exec();
+      expect(response.status).to.be.equal(201);
+      expect(response.body.user.age).to.be.equal(0);
     });
   });
 });
