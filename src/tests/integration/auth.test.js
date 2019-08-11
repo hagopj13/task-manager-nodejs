@@ -6,7 +6,7 @@ const User = require('../../models/user.model');
 const { setupUsers } = require('./fixtures');
 const { userOne } = require('./fixtures/user.fixtures');
 
-describe('Authentication API', () => {
+describe('Authentication Route', () => {
   beforeEach(async () => {
     await setupUsers();
   });
