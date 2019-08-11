@@ -15,10 +15,6 @@ const errorConverter = (err, req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  if (res.headersSent) {
-    next(err);
-  }
-
   const { statusCode: status, error, message } = err.output.payload;
   const response = { status, error, message };
 
@@ -29,7 +25,9 @@ const errorHandler = (err, req, res, next) => {
   res.locals.errorMessage =
     status === 500 && res.locals.originalErrorMessage ? res.locals.originalErrorMessage : message;
 
-  res.status(status).send(response);
+  if (!res.headersSent) {
+    res.status(status).send(response);
+  }
 };
 
 const notFoundError = (req, res, next) => {

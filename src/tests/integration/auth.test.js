@@ -44,14 +44,16 @@ describe('Authentication API', () => {
       expect(dbUser.password).not.to.be.equal(newUser.password);
     });
 
-    it('should return an error if email is invalid or missing', async () => {
-      newUser.email = 'notvalid';
-      const response1 = await exec();
-      expect(response1.status).to.be.equal(400);
-
+    it('should return an error if email is missing', async () => {
       delete newUser.email;
-      const response2 = await exec();
-      expect(response2.status).to.be.equal(400);
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
+    });
+
+    it('should return an error if email is invalid', async () => {
+      newUser.email = 'notvalid';
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
     });
 
     it('should return an error if email is already used', async () => {
@@ -60,14 +62,27 @@ describe('Authentication API', () => {
       expect(response.status).to.be.equal(400);
     });
 
-    it('should return an error if password is invalid or missing', async () => {
-      newUser.password = 'Red1234!password';
-      const response1 = await exec();
-      expect(response1.status).to.be.equal(400);
-
+    it('should return an error if password is missing', async () => {
       delete newUser.password;
-      const response2 = await exec();
-      expect(response2.status).to.be.equal(400);
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
+    });
+
+    it('should return an error if password is contains the word password', async () => {
+      newUser.password = 'Red1234!password';
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
+
+      // password shorter than 8 characters
+      newUser.password = 'Red1234';
+      const response3 = await exec();
+      expect(response3.status).to.be.equal(400);
+    });
+
+    it('should return an error if password is shorter than 8 characters', async () => {
+      newUser.password = 'Red1234';
+      const response = await exec();
+      expect(response.status).to.be.equal(400);
     });
 
     it('should return an error if name is missing', async () => {
