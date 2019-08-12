@@ -2,6 +2,7 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
+const httpStatus = require('http-status');
 const asyncController = require('../../middlewares/controller');
 
 describe('Contoller middleware tests', () => {
@@ -42,7 +43,7 @@ describe('Contoller middleware tests', () => {
       expect(nextSpy.calledOnce).to.be.true;
       const nextError = nextSpy.firstCall.args[0];
       expect(nextError).to.be.equal(error);
-      expect(nextError.statusCode).to.be.equal(500);
+      expect(nextError.statusCode).to.be.equal(httpStatus.INTERNAL_SERVER_ERROR);
       expect(nextError.message).to.be.equal(errorMessage);
     });
 
@@ -50,7 +51,7 @@ describe('Contoller middleware tests', () => {
       const errorMessage = 'error message';
       const error = new Error(errorMessage);
       const fn = () => Promise.reject(error);
-      const defaultStatusCode = 400;
+      const defaultStatusCode = httpStatus.BAD_REQUEST;
       const controllerMiddleware = asyncController(fn, defaultStatusCode);
       await controllerMiddleware(req, res, nextSpy);
       expect(nextSpy.calledOnce).to.be.true;
@@ -63,10 +64,10 @@ describe('Contoller middleware tests', () => {
     it('should call next with error object that already has a status code', async () => {
       const errorMessage = 'error message';
       const error = new Error(errorMessage);
-      const definedStatusCode = 404;
+      const definedStatusCode = httpStatus.NOT_FOUND;
       error.statusCode = definedStatusCode;
       const fn = () => Promise.reject(error);
-      const defaultStatusCode = 400;
+      const defaultStatusCode = httpStatus.BAD_REQUEST;
       const controllerMiddleware = asyncController(fn, defaultStatusCode);
       await controllerMiddleware(req, res, nextSpy);
       expect(nextSpy.calledOnce).to.be.true;

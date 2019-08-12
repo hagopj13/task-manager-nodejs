@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
+const httpStatus = require('http-status');
 const { errorConverter, errorHandler } = require('../../middlewares/error');
 
 describe('Error middleware tests', () => {
@@ -35,14 +36,14 @@ describe('Error middleware tests', () => {
       const newError = nextSpy.firstCall.args[0];
       expect(newError).to.be.an.instanceOf(Boom);
       const { statusCode, message } = newError.output.payload;
-      expect(statusCode).to.be.equal(500);
+      expect(statusCode).to.be.equal(httpStatus.INTERNAL_SERVER_ERROR);
       expect(message).to.be.equal(errorMessage500);
       expect(res.locals.originalErrorMessage).to.be.equal(originalErrorMessage);
     });
 
     it('should convert an error status to boom and store its message', () => {
       const originalErrorMessage = 'original error message';
-      const originalStatusCode = 400;
+      const originalStatusCode = httpStatus.BAD_REQUEST;
       const error = new Error(originalErrorMessage);
       error.statusCode = originalStatusCode;
       errorConverter(error, req, res, nextSpy);
@@ -62,7 +63,7 @@ describe('Error middleware tests', () => {
       const newError = nextSpy.firstCall.args[0];
       expect(newError).to.be.an.instanceOf(Boom);
       const { statusCode, message } = newError.output.payload;
-      expect(statusCode).to.be.equal(500);
+      expect(statusCode).to.be.equal(httpStatus.INTERNAL_SERVER_ERROR);
       expect(message).to.be.equal(errorMessage500);
       expect(res.locals.originalErrorMessage).to.be.equal('');
     });
@@ -74,7 +75,7 @@ describe('Error middleware tests', () => {
       const newError = nextSpy.firstCall.args[0];
       expect(newError).to.be.an.instanceOf(Boom);
       const { statusCode, message } = newError.output.payload;
-      expect(statusCode).to.be.equal(500);
+      expect(statusCode).to.be.equal(httpStatus.INTERNAL_SERVER_ERROR);
       expect(message).to.be.equal(errorMessage500);
       expect(res.locals.originalErrorMessage).to.be.equal('');
     });
@@ -97,13 +98,13 @@ describe('Error middleware tests', () => {
 
     it('should send proper error response if given boom error', () => {
       const errorMessage = 'error message';
-      const statusCode = 400;
+      const statusCode = httpStatus.BAD_REQUEST;
       const error = new Boom(errorMessage, { statusCode });
       errorHandler(error, req, res, next);
       expect(sendSpy.calledOnce).to.be.true;
       const response = sendSpy.firstCall.args[0];
       expect(response).to.have.property('status', statusCode);
-      expect(response).to.have.property('error', 'Bad Request');
+      expect(response).to.have.property('error', httpStatus[statusCode]);
       expect(response).to.have.property('message', errorMessage);
       expect(response).not.to.have.property('stack');
       expect(res.locals.errorMessage).to.equal(errorMessage);
@@ -111,13 +112,13 @@ describe('Error middleware tests', () => {
 
     it('should send proper error response if given 500 boom error', () => {
       const errorMessage = 'error message';
-      const statusCode = 500;
+      const statusCode = httpStatus.INTERNAL_SERVER_ERROR;
       const error = new Boom(errorMessage, { statusCode });
       errorHandler(error, req, res, next);
       expect(sendSpy.calledOnce).to.be.true;
       const response = sendSpy.firstCall.args[0];
       expect(response).to.have.property('status', statusCode);
-      expect(response).to.have.property('error', 'Internal Server Error');
+      expect(response).to.have.property('error', httpStatus[statusCode]);
       expect(response).to.have.property('message', errorMessage500);
       expect(response).not.to.have.property('stack');
       expect(res.locals.errorMessage).to.equal(originalErrorMessage);
@@ -126,7 +127,7 @@ describe('Error middleware tests', () => {
     it('should set errorMessage in res.locals to 500 error message if no original is given', () => {
       delete res.locals.originalErrorMessage;
       const errorMessage = 'error message';
-      const statusCode = 500;
+      const statusCode = httpStatus.INTERNAL_SERVER_ERROR;
       const error = new Boom(errorMessage, { statusCode });
       errorHandler(error, req, res, next);
       expect(res.locals.errorMessage).to.equal(errorMessage500);
@@ -137,8 +138,8 @@ describe('Error middleware tests', () => {
       errorHandler(error, req, res, next);
       expect(sendSpy.calledOnce).to.be.true;
       const response = sendSpy.firstCall.args[0];
-      expect(response).to.have.property('status', 500);
-      expect(response).to.have.property('error', 'Internal Server Error');
+      expect(response).to.have.property('status', httpStatus.INTERNAL_SERVER_ERROR);
+      expect(response).to.have.property('error', httpStatus[httpStatus.INTERNAL_SERVER_ERROR]);
       expect(response).to.have.property('message', errorMessage500);
       expect(response).not.to.have.property('stack');
       expect(res.locals.errorMessage).to.equal(originalErrorMessage);
@@ -146,7 +147,7 @@ describe('Error middleware tests', () => {
 
     it('should put stack in the error response if in development env', () => {
       const errorMessage = 'error message';
-      const statusCode = 400;
+      const statusCode = httpStatus.BAD_REQUEST;
       const error = new Boom(errorMessage, { statusCode });
       const errorMiddlewares = rewire('../../middlewares/error');
       errorMiddlewares.__with__({

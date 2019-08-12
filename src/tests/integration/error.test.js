@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const request = require('supertest');
+const httpStatus = require('http-status');
 const app = require('../../app');
 
 describe('Errors', () => {
@@ -8,7 +9,7 @@ describe('Errors', () => {
       const response = await request(app)
         .get('/anyLink')
         .send();
-      expect(response.status).to.be.equal(404);
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
   });
 });
