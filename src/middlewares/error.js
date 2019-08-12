@@ -15,11 +15,15 @@ const errorConverter = (err, req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  const { statusCode: status, error, message } = err.output.payload;
+  let errorObj = err;
+  if (!(errorObj instanceof Boom)) {
+    errorObj = Boom.badImplementation();
+  }
+  const { statusCode: status, error, message } = errorObj.output.payload;
   const response = { status, error, message };
 
   if (env === 'development') {
-    response.stack = err.stack;
+    response.stack = errorObj.stack;
   }
 
   res.locals.errorMessage =

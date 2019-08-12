@@ -1,10 +1,13 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
+const rewire = require('rewire');
 const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
-const { errorConverter } = require('../../middlewares/error');
+const { errorConverter, errorHandler } = require('../../middlewares/error');
 
 describe('Error middleware tests', () => {
+  const errorMessage500 = 'An internal server error occurred';
+
   describe('Error converter', () => {
     let req;
     let res;
@@ -33,7 +36,7 @@ describe('Error middleware tests', () => {
       expect(newError).to.be.an.instanceOf(Boom);
       const { statusCode, message } = newError.output.payload;
       expect(statusCode).to.be.equal(500);
-      expect(message).to.be.equal('An internal server error occurred');
+      expect(message).to.be.equal(errorMessage500);
       expect(res.locals.originalErrorMessage).to.be.equal(originalErrorMessage);
     });
 
@@ -60,7 +63,7 @@ describe('Error middleware tests', () => {
       expect(newError).to.be.an.instanceOf(Boom);
       const { statusCode, message } = newError.output.payload;
       expect(statusCode).to.be.equal(500);
-      expect(message).to.be.equal('An internal server error occurred');
+      expect(message).to.be.equal(errorMessage500);
       expect(res.locals.originalErrorMessage).to.be.equal('');
     });
 
@@ -72,8 +75,86 @@ describe('Error middleware tests', () => {
       expect(newError).to.be.an.instanceOf(Boom);
       const { statusCode, message } = newError.output.payload;
       expect(statusCode).to.be.equal(500);
-      expect(message).to.be.equal('An internal server error occurred');
+      expect(message).to.be.equal(errorMessage500);
       expect(res.locals.originalErrorMessage).to.be.equal('');
+    });
+  });
+
+  describe('Error handler', () => {
+    let req;
+    let res;
+    let sendSpy;
+    const next = () => {};
+    const originalErrorMessage = 'original error message';
+
+    beforeEach(() => {
+      req = httpMocks.createRequest();
+      res = httpMocks.createResponse({
+        locals: { originalErrorMessage },
+      });
+      sendSpy = sinon.spy(res, 'send');
+    });
+
+    it('should send proper error response if given boom error', () => {
+      const errorMessage = 'error message';
+      const statusCode = 400;
+      const error = new Boom(errorMessage, { statusCode });
+      errorHandler(error, req, res, next);
+      expect(sendSpy.calledOnce).to.be.true;
+      const response = sendSpy.firstCall.args[0];
+      expect(response).to.have.property('status', statusCode);
+      expect(response).to.have.property('error', 'Bad Request');
+      expect(response).to.have.property('message', errorMessage);
+      expect(response).not.to.have.property('stack');
+      expect(res.locals.errorMessage).to.equal(errorMessage);
+    });
+
+    it('should send proper error response if given 500 boom error', () => {
+      const errorMessage = 'error message';
+      const statusCode = 500;
+      const error = new Boom(errorMessage, { statusCode });
+      errorHandler(error, req, res, next);
+      expect(sendSpy.calledOnce).to.be.true;
+      const response = sendSpy.firstCall.args[0];
+      expect(response).to.have.property('status', statusCode);
+      expect(response).to.have.property('error', 'Internal Server Error');
+      expect(response).to.have.property('message', errorMessage500);
+      expect(response).not.to.have.property('stack');
+      expect(res.locals.errorMessage).to.equal(originalErrorMessage);
+    });
+
+    it('should set errorMessage in res.locals to 500 error message if no original is given', () => {
+      delete res.locals.originalErrorMessage;
+      const errorMessage = 'error message';
+      const statusCode = 500;
+      const error = new Boom(errorMessage, { statusCode });
+      errorHandler(error, req, res, next);
+      expect(res.locals.errorMessage).to.equal(errorMessage500);
+    });
+
+    it('should send 500 error response if not given boom error', () => {
+      const error = undefined;
+      errorHandler(error, req, res, next);
+      expect(sendSpy.calledOnce).to.be.true;
+      const response = sendSpy.firstCall.args[0];
+      expect(response).to.have.property('status', 500);
+      expect(response).to.have.property('error', 'Internal Server Error');
+      expect(response).to.have.property('message', errorMessage500);
+      expect(response).not.to.have.property('stack');
+      expect(res.locals.errorMessage).to.equal(originalErrorMessage);
+    });
+
+    it('should put stack in the error response if in development env', () => {
+      const errorMessage = 'error message';
+      const statusCode = 400;
+      const error = new Boom(errorMessage, { statusCode });
+      const errorMiddlewares = rewire('../../middlewares/error');
+      errorMiddlewares.__with__({
+        env: 'development',
+      })(() => errorMiddlewares.errorHandler(error, req, res, next));
+      expect(sendSpy.calledOnce).to.be.true;
+      const response = sendSpy.firstCall.args[0];
+      expect(response).to.have.property('stack');
     });
   });
 });
