@@ -8,6 +8,7 @@
   "rules": {
     "no-console": "error",
     "promise/no-callback-in-promise": "off",
+    "promise/no-promise-in-callback": "off",
     "func-names": "off",
     "no-underscore-dangle": "off",
     "no-unused-expressions": "off",
