@@ -13,6 +13,15 @@ const register = asyncController(async (req, res) => {
   res.status(httpStatus.CREATED).send(response);
 });
 
+const login = asyncController(async (req, res) => {
+  const user = await User.findByCredentials(req.body.email, req.body.password);
+  const response = {
+    user: pick(user, ['id', 'name', 'email', 'age']),
+  };
+  res.send(response);
+});
+
 module.exports = {
   register,
+  login,
 };

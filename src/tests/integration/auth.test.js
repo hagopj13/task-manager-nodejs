@@ -7,7 +7,7 @@ const User = require('../../models/user.model');
 const { setupUsers } = require('./fixtures');
 const { userOne } = require('./fixtures/user.fixtures');
 
-describe('Authentication Route', () => {
+describe('Auth Route', () => {
   beforeEach(async () => {
     await setupUsers();
   });
@@ -39,8 +39,9 @@ describe('Authentication Route', () => {
       expect(response.status).to.be.equal(httpStatus.CREATED);
       delete newUser.password;
       expect(response.body.user).to.include(newUser);
+      expect(response.body.user).to.have.property('id');
 
-      const dbUser = await User.findById(response.body.user._id);
+      const dbUser = await User.findById(response.body.user.id);
       expect(dbUser).to.be.ok;
       expect(dbUser.password).not.to.be.equal(newUser.password);
     });

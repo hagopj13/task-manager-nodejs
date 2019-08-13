@@ -6,5 +6,6 @@ const validation = require('../../validations/auth.validation');
 const router = express.Router();
 
 router.post('/register', validate(validation.register), controller.register);
+router.post('/login', validate(validation.login), controller.login);
 
 module.exports = router;

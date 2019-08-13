@@ -51,6 +51,18 @@ userSchema.statics.checkDuplicateEmail = async function(email) {
   }
 };
 
+userSchema.statics.findByCredentials = async function(email, password) {
+  const user = await this.findOne({ email });
+  if (!user) {
+    throw Boom.unauthorized('Incorrect email or password');
+  }
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  if (!isPasswordMatch) {
+    throw Boom.unauthorized('Incorrect email or password');
+  }
+  return user;
+};
+
 userSchema.methods.toJSON = function() {
   const user = this;
   const userObj = user.toObject();
