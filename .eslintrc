@@ -11,6 +11,7 @@
     "promise/no-promise-in-callback": "off",
     "func-names": "off",
     "no-underscore-dangle": "off",
+    "import/no-extraneous-dependencies": [2, { "devDependencies": true }],
     "no-unused-expressions": "off",
     "chai-friendly/no-unused-expressions": "error"
   }
