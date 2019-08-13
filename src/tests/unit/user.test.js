@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { expect } = require('chai');
 const User = require('../../models/user.model');
+const { userOne } = require('../fixtures/user.fixtures');
 
 describe('User model unit tests', () => {
   after(() => {
@@ -53,6 +54,13 @@ describe('User model unit tests', () => {
     it('should throw a validation error when age is less than 0', done => {
       newUser.age = -1;
       validateUser(false, done);
+    });
+  });
+
+  describe('User toJSON method', () => {
+    it('should not return user password when toJSON is called', () => {
+      const user = new User(userOne);
+      expect(user.toJSON()).not.to.have.property('password');
     });
   });
 });

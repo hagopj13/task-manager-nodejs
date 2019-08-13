@@ -5,8 +5,8 @@ const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const app = require('../../app');
 const User = require('../../models/user.model');
-const { setupUsers } = require('./fixtures');
-const { userOne } = require('./fixtures/user.fixtures');
+const { setupUsers } = require('../fixtures');
+const { userOne } = require('../fixtures/user.fixtures');
 
 describe('Auth Route', () => {
   after(() => {
