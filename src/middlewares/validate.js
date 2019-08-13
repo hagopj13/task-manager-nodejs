@@ -7,7 +7,8 @@ const validate = schema => (req, res, next) => {
   const toValidate = pick(req, Object.keys(validSchema));
   Joi.validate(toValidate, validSchema, { abortEarly: false }, (err, value) => {
     if (err) {
-      return next(Boom.badRequest(`Validation Error: ${err.message}`));
+      const errorMessage = err.details.map(details => details.message).join(', ');
+      return next(Boom.badRequest(errorMessage));
     }
     Object.assign(req, value);
     return next();
