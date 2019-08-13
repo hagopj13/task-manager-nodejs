@@ -48,6 +48,7 @@ describe('Auth Route', () => {
     const checkRegisterValidationError = async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
+      expect(response.body.status).to.be.equal(httpStatus.BAD_REQUEST);
     };
 
     it('should return an error if email is missing', async () => {
@@ -125,6 +126,7 @@ describe('Auth Route', () => {
     const checkLoginValidationError = async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
+      expect(response.body.status).to.be.equal(httpStatus.BAD_REQUEST);
     };
 
     it('should return a 400 error if email is missing', async () => {
