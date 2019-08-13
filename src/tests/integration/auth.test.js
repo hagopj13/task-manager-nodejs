@@ -7,7 +7,6 @@ const app = require('../../app');
 const User = require('../../models/user.model');
 const { setupUsers } = require('../fixtures');
 const { userOne } = require('../fixtures/user.fixtures');
-const { checkValidationError } = require('../utils/test.utils');
 
 describe('Auth Route', () => {
   after(() => {
@@ -48,7 +47,7 @@ describe('Auth Route', () => {
 
     const checkRegisterValidationError = async () => {
       const response = await exec();
-      checkValidationError(response);
+      expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
     };
 
     it('should return an error if email is missing', async () => {
@@ -125,7 +124,7 @@ describe('Auth Route', () => {
 
     const checkLoginValidationError = async () => {
       const response = await exec();
-      checkValidationError(response);
+      expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
     };
 
     it('should return a 400 error if email is missing', async () => {
