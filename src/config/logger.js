@@ -9,6 +9,7 @@ const logger = createLogger({
       stderrLevels: ['error'],
       format: format.combine(
         env === 'development' ? format.colorize() : format.uncolorize(),
+        format.splat(),
         format.printf(({ level, message }) => `${level}: ${message}`)
       ),
       handleExceptions: true,
