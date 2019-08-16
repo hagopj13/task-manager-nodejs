@@ -71,6 +71,7 @@ describe('Error middleware tests', () => {
     let req;
     let res;
     let sendSpy;
+    let error;
     const next = () => {};
     const originalErrorMessage = 'original error message';
 
@@ -82,7 +83,7 @@ describe('Error middleware tests', () => {
       sendSpy = sinon.spy(res, 'send');
     });
 
-    const checkErrorResponse = (error, expectedResponse) => {
+    const checkErrorResponse = expectedResponse => {
       errorHandler(error, req, res, next);
       expect(sendSpy.calledOnce).to.be.true;
       const response = sendSpy.firstCall.args[0];
@@ -92,37 +93,37 @@ describe('Error middleware tests', () => {
     it('should send proper error response if given boom error', () => {
       const errorMessage = 'error message';
       const statusCode = httpStatus.BAD_REQUEST;
-      const error = new Boom(errorMessage, { statusCode });
+      error = new Boom(errorMessage, { statusCode });
       const expectedResponse = {
         status: statusCode,
         error: httpStatus[statusCode],
         message: errorMessage,
       };
-      checkErrorResponse(error, expectedResponse);
+      checkErrorResponse(expectedResponse);
       expect(res.locals.errorMessage).to.equal(errorMessage);
     });
 
     it('should send proper error response if given 500 boom error', () => {
       const errorMessage = 'error message';
       const statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-      const error = new Boom(errorMessage, { statusCode });
+      error = new Boom(errorMessage, { statusCode });
       const expectedResponse = {
         status: statusCode,
         error: httpStatus[statusCode],
         message: errorMessage500,
       };
-      checkErrorResponse(error, expectedResponse);
+      checkErrorResponse(expectedResponse);
       expect(res.locals.errorMessage).to.equal(originalErrorMessage);
     });
 
     it('should send 500 error response if not given boom error', () => {
-      const error = undefined;
+      error = undefined;
       const expectedResponse = {
         status: httpStatus.INTERNAL_SERVER_ERROR,
         error: httpStatus[httpStatus.INTERNAL_SERVER_ERROR],
         message: errorMessage500,
       };
-      checkErrorResponse(error, expectedResponse);
+      checkErrorResponse(expectedResponse);
       expect(res.locals.errorMessage).to.equal(originalErrorMessage);
     });
 
@@ -130,7 +131,7 @@ describe('Error middleware tests', () => {
       delete res.locals.originalErrorMessage;
       const errorMessage = 'error message';
       const statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-      const error = new Boom(errorMessage, { statusCode });
+      error = new Boom(errorMessage, { statusCode });
       errorHandler(error, req, res, next);
       expect(res.locals.errorMessage).to.equal(errorMessage500);
     });
@@ -138,7 +139,7 @@ describe('Error middleware tests', () => {
     it('should put stack in the error response if in development env', () => {
       const errorMessage = 'error message';
       const statusCode = httpStatus.BAD_REQUEST;
-      const error = new Boom(errorMessage, { statusCode });
+      error = new Boom(errorMessage, { statusCode });
       const errorMiddlewares = rewire('../../middlewares/error');
       errorMiddlewares.__with__({
         env: 'development',
