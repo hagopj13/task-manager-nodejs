@@ -45,14 +45,14 @@ const userSchema = mongoose.Schema(
 );
 
 userSchema.statics.checkDuplicateEmail = async function(email) {
-  const user = await this.findOne({ email });
+  const user = await User.findOne({ email });
   if (user) {
     throw Boom.badRequest('Email is already used');
   }
 };
 
 userSchema.statics.findByCredentials = async function(email, password) {
-  const user = await this.findOne({ email });
+  const user = await User.findOne({ email });
   if (!user) {
     throw Boom.unauthorized('Incorrect email or password');
   }

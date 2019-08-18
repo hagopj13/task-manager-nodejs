@@ -7,11 +7,12 @@
   },
   "rules": {
     "no-console": "error",
-    "promise/no-callback-in-promise": "off",
-    "promise/no-promise-in-callback": "off",
     "func-names": "off",
     "no-underscore-dangle": "off",
-    "import/no-extraneous-dependencies": [2, { "devDependencies": true }],
+    "no-use-before-define": ["error", { "variables": false }],
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
+    "promise/no-callback-in-promise": "off",
+    "promise/no-promise-in-callback": "off",
     "no-unused-expressions": "off",
     "chai-friendly/no-unused-expressions": "error"
   }
