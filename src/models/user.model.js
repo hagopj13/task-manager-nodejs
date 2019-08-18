@@ -82,7 +82,7 @@ userSchema.methods.generateAuthTokens = async function() {
 
   const tokens = {
     accessToken: { token, expires: expires.toDate() },
-    refreshToken: pick(refreshToken, ['token', 'expires']),
+    refreshToken,
   };
   return tokens;
 };
@@ -97,7 +97,6 @@ userSchema.pre('save', async function(next) {
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);
   }
-
   next();
 });
 

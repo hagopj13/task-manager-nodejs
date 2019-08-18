@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const Boom = require('boom');
+const { pick } = require('lodash');
 const { jwt: jwtConfig } = require('../config/config');
 
 const refreshTokenSchema = mongoose.Schema({
@@ -43,6 +44,11 @@ refreshTokenSchema.statics.generate = async function(user) {
   }
 
   return refreshToken;
+};
+
+refreshTokenSchema.methods.toJSON = function() {
+  const refreshToken = this;
+  return pick(refreshToken, ['token', 'expires']);
 };
 
 const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
