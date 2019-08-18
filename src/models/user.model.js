@@ -89,9 +89,7 @@ userSchema.methods.generateAuthTokens = async function() {
 
 userSchema.methods.toJSON = function() {
   const user = this;
-  const userObj = user.toObject();
-  delete userObj.password;
-  return userObj;
+  return pick(user, ['id', 'name', 'email', 'age']);
 };
 
 userSchema.pre('save', async function(next) {

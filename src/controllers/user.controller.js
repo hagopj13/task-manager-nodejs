@@ -1,11 +1,9 @@
-const { pick } = require('lodash');
 const asyncController = require('../middlewares/controller');
 
-const me = asyncController(async (req, res) => {
-  const response = pick(req.user, ['id', 'name', 'email', 'age']);
-  res.send(response);
+const currentUser = asyncController(async (req, res) => {
+  res.send(req.user);
 });
 
 module.exports = {
-  me,
+  currentUser,
 };
