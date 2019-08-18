@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const Boom = require('boom');
+const moment = require('moment');
+const { pick } = require('lodash');
+const jwt = require('jsonwebtoken');
+const { jwt: jwtConfig } = require('../config/config');
+const RefreshToken = require('./refreshToken.model');
 
 const userSchema = mongoose.Schema(
   {
@@ -61,6 +66,25 @@ userSchema.statics.findByCredentials = async function(email, password) {
     throw Boom.unauthorized('Incorrect email or password');
   }
   return user;
+};
+
+userSchema.methods.generateAuthTokens = async function() {
+  const user = this;
+  const expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
+  const payload = {
+    sub: user._id,
+    iat: moment().unix(),
+    exp: expires.unix(),
+  };
+  const token = jwt.sign(payload, jwtConfig.secret);
+
+  const refreshToken = await RefreshToken.generate(user);
+
+  const tokens = {
+    accessToken: { token, expires: expires.toDate() },
+    refreshToken: pick(refreshToken, ['token', 'expires']),
+  };
+  return tokens;
 };
 
 userSchema.methods.toJSON = function() {
