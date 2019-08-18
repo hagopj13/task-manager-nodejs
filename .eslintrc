@@ -7,11 +7,13 @@
   },
   "rules": {
     "no-console": "error",
+    "func-names": "off",
+    "consistent-return": "off",
+    "no-underscore-dangle": "off",
+    "no-use-before-define": ["error", { "variables": false }],
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
     "promise/no-callback-in-promise": "off",
     "promise/no-promise-in-callback": "off",
-    "func-names": "off",
-    "no-underscore-dangle": "off",
-    "import/no-extraneous-dependencies": [2, { "devDependencies": true }],
     "no-unused-expressions": "off",
     "chai-friendly/no-unused-expressions": "error"
   }

@@ -3,6 +3,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const cors = require('cors');
 const methodOverride = require('method-override');
+const passport = require('passport');
+const { jwtStrategy } = require('./config/passport');
 require('./db/mongoose');
 const { successResponseMorgan, errorResponseMorgan } = require('./config/morgan');
 const routes = require('./routes/v1');
@@ -20,6 +22,9 @@ app.use(compression());
 app.use(methodOverride());
 app.use(helmet());
 app.use(cors());
+
+app.use(passport.initialize());
+passport.use('jwt', jwtStrategy);
 
 app.use('/v1', routes);
 
