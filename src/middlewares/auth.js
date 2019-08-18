@@ -9,18 +9,19 @@ const jwtCallback = (req, res, next) => async (err, user, info) => {
   }
 
   const login = promisify(req.login);
+
   try {
     await login(user, { session: false });
   } catch (e) {
     return next(unauthorizedError);
   }
-
+  req.user = user;
   // manage access rights here
 
   next();
 };
 
-const auth = (req, res, next) => {
+const auth = () => (req, res, next) => {
   passport.authenticate('jwt', { session: false }, jwtCallback(req, res, next))(req, res, next);
 };
 
