@@ -8,6 +8,7 @@
   "rules": {
     "no-console": "error",
     "func-names": "off",
+    "consistent-return": "off",
     "no-underscore-dangle": "off",
     "no-use-before-define": ["error", { "variables": false }],
     "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
