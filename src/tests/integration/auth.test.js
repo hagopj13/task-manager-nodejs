@@ -5,14 +5,29 @@ const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const app = require('../../app');
 const User = require('../../models/user.model');
+const RefreshToken = require('../../models/refreshToken.model');
 const { setupUsers } = require('../fixtures');
-const { userOne } = require('../fixtures/user.fixtures');
+const { userOne, userOneRefreshToken } = require('../fixtures/user.fixtures');
 
 describe('Auth Route', () => {
+  beforeEach(async () => {
+    await setupUsers();
+  });
+
   after(() => {
     mongoose.models = {};
     mongoose.modelSchemas = {};
   });
+
+  const checkTokensInResponse = response => {
+    const { accessToken, refreshToken } = response.body;
+    expect(accessToken).to.be.ok;
+    expect(accessToken).to.have.property('token');
+    expect(accessToken).to.have.property('expires');
+    expect(refreshToken).to.be.ok;
+    expect(refreshToken).to.have.property('token');
+    expect(refreshToken).to.have.property('expires');
+  };
 
   describe('POST /v1/auth/register', () => {
     let newUser;
@@ -23,7 +38,6 @@ describe('Auth Route', () => {
         password: 'White1234!',
         age: 22,
       };
-      await setupUsers();
     });
 
     const exec = async () => {
@@ -39,6 +53,7 @@ describe('Auth Route', () => {
       expect(response.body.user).to.include(newUser);
       expect(response.body.user).not.to.have.property('password');
       expect(response.body.user).to.have.property('id');
+      checkTokensInResponse(response);
 
       const dbUser = await User.findById(response.body.user.id);
       expect(dbUser).to.be.ok;
@@ -117,6 +132,7 @@ describe('Auth Route', () => {
     it('should successfully login user when correct email and password are provided', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
+      checkTokensInResponse(response);
 
       const dbUser = await User.findById(userOne._id);
       expect(response.body.user).to.be.deep.equal(pick(dbUser, ['id', 'email', 'name', 'age']));
@@ -156,6 +172,32 @@ describe('Auth Route', () => {
     it('should return a 401 error if user password is wrong', async () => {
       loginCredentials.password = 'wrongPassword';
       await checkLoginAttemptError();
+    });
+  });
+
+  describe('POST /v1/auth/refreshToken', () => {
+    let refreshToken;
+    beforeEach(() => {
+      refreshToken = userOneRefreshToken;
+    });
+
+    const exec = async () => {
+      return request(app)
+        .post('/v1/auth/refreshToken')
+        .send({ refreshToken });
+    };
+
+    it('should successfully refresh access token for a valid refresh token', async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      checkTokensInResponse(response);
+
+      const dbRefreshToken = await RefreshToken.findOne({
+        token: response.body.refreshToken.token,
+      });
+      expect(dbRefreshToken).to.be.ok;
+      expect(dbRefreshToken.user.toHexString()).to.be.equal(userOne._id.toHexString());
+      expect(dbRefreshToken.blacklisted).to.be.false;
     });
   });
 });
