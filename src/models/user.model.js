@@ -3,7 +3,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const Boom = require('boom');
 const moment = require('moment');
-const { pick } = require('lodash');
+const { pick, omit } = require('lodash');
 const jwt = require('jsonwebtoken');
 const { jwt: jwtConfig } = require('../config/config');
 const RefreshToken = require('./refreshToken.model');
@@ -77,19 +77,24 @@ userSchema.methods.generateAuthTokens = async function() {
     exp: expires.unix(),
   };
   const token = jwt.sign(payload, jwtConfig.secret);
+  const accessToken = { token, expires: expires.toDate() };
 
   const refreshToken = await RefreshToken.generate(user);
 
-  const tokens = {
-    accessToken: { token, expires: expires.toDate() },
-    refreshToken,
+  return {
+    accessToken,
+    refreshToken: refreshToken.transform(),
   };
-  return tokens;
 };
 
 userSchema.methods.toJSON = function() {
   const user = this;
-  return pick(user, ['id', 'name', 'email', 'age']);
+  return omit(user.toObject(), ['password']);
+};
+
+userSchema.methods.transform = function() {
+  const user = this;
+  return pick(user, ['id', 'email', 'name', 'age']);
 };
 
 userSchema.pre('save', async function(next) {

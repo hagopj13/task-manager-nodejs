@@ -46,7 +46,7 @@ refreshTokenSchema.statics.generate = async function(user) {
   return refreshToken;
 };
 
-refreshTokenSchema.methods.toJSON = function() {
+refreshTokenSchema.methods.transform = function() {
   const refreshToken = this;
   return pick(refreshToken, ['token', 'expires']);
 };

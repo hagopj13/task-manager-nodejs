@@ -7,14 +7,20 @@ const register = asyncController(async (req, res) => {
   const user = new User(req.body);
   await user.save();
   const tokens = await user.generateAuthTokens();
-  const response = { user, tokens };
+  const response = {
+    user: user.transform(),
+    tokens,
+  };
   res.status(httpStatus.CREATED).send(response);
 });
 
 const login = asyncController(async (req, res) => {
   const user = await User.findByCredentials(req.body.email, req.body.password);
   const tokens = await user.generateAuthTokens();
-  const response = { user, tokens };
+  const response = {
+    user: user.transform(),
+    tokens,
+  };
   res.send(response);
 });
 
