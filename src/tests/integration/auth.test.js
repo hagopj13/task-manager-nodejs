@@ -143,12 +143,12 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
     };
 
-    it('should return a 400 error if email is missing', async () => {
+    it('should return an error if email is missing', async () => {
       delete loginCredentials.email;
       await checkLoginValidationError();
     });
 
-    it('should return a 400 error if password is missing', async () => {
+    it('should return an error if password is missing', async () => {
       delete loginCredentials.password;
       await checkLoginValidationError();
     });
@@ -164,12 +164,12 @@ describe('Auth Route', () => {
       expect(response.body).to.be.deep.equal(expectedError);
     };
 
-    it('should return a 401 error if user with such an email is not found', async () => {
+    it('should return an error if user with such an email is not found', async () => {
       loginCredentials.email = 'unknownEmail@example.com';
       await checkLoginAttemptError();
     });
 
-    it('should return a 401 error if user password is wrong', async () => {
+    it('should return an error if user password is wrong', async () => {
       loginCredentials.password = 'wrongPassword';
       await checkLoginAttemptError();
     });
@@ -198,6 +198,12 @@ describe('Auth Route', () => {
       expect(dbRefreshToken).to.be.ok;
       expect(dbRefreshToken.user.toHexString()).to.be.equal(userOne._id.toHexString());
       expect(dbRefreshToken.blacklisted).to.be.false;
+    });
+
+    it('should return an error if refresh token is missing', async () => {
+      refreshToken = null;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
     });
   });
 });
