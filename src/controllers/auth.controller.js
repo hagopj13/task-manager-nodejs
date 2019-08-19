@@ -26,9 +26,9 @@ const login = asyncController(async (req, res) => {
   res.send(response);
 });
 
-const refresh = asyncController(async (req, res) => {
-  const refreshToken = await RefreshToken.verify(req.body.refreshToken);
-  const user = await User.findById(refreshToken.user);
+const refreshToken = asyncController(async (req, res) => {
+  const refreshTokenDoc = await RefreshToken.verify(req.body.refreshToken);
+  const user = await User.findById(refreshTokenDoc.user);
   if (!user) {
     throw Boom.unauthorized('Please authenticate');
   }
@@ -40,5 +40,5 @@ const refresh = asyncController(async (req, res) => {
 module.exports = {
   register,
   login,
-  refresh,
+  refreshToken,
 };
