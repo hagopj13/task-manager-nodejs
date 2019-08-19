@@ -7,13 +7,13 @@ const RefreshToken = require('../../models/refreshToken.model');
 
 const accessTokenExpires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
 const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
-const generateToken = (_id, expires) => {
+const generateToken = (_id, expires, secret = jwtConfig.secret) => {
   const payload = {
     sub: _id.toHexString(),
     iat: moment().unix(),
     exp: expires.unix(),
   };
-  return jwt.sign(payload, jwtConfig.secret);
+  return jwt.sign(payload, secret);
 };
 
 const userOneId = mongoose.Types.ObjectId();

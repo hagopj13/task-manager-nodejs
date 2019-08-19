@@ -2,12 +2,19 @@ const mongoose = require('mongoose');
 const { expect } = require('chai');
 const request = require('supertest');
 const httpStatus = require('http-status');
+const moment = require('moment');
 const { pick } = require('lodash');
 const app = require('../../app');
 const User = require('../../models/user.model');
 const RefreshToken = require('../../models/refreshToken.model');
+const { jwt: jwtConfig } = require('../../config/config');
 const { setupUsers } = require('../fixtures');
-const { userOne, userOneRefreshToken } = require('../fixtures/user.fixtures');
+const {
+  userOne,
+  userOneId,
+  userOneRefreshToken,
+  generateToken,
+} = require('../fixtures/user.fixtures');
 
 describe('Auth Route', () => {
   beforeEach(async () => {
@@ -134,7 +141,7 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensInResponse(response);
 
-      const dbUser = await User.findById(userOne._id);
+      const dbUser = await User.findById(userOneId);
       expect(response.body.user).to.be.deep.equal(pick(dbUser, ['id', 'email', 'name', 'age']));
     });
 
@@ -177,8 +184,10 @@ describe('Auth Route', () => {
 
   describe('POST /v1/auth/refreshToken', () => {
     let refreshToken;
+    let refreshTokenExpires;
     beforeEach(() => {
       refreshToken = userOneRefreshToken;
+      refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
     });
 
     const exec = async () => {
@@ -196,14 +205,76 @@ describe('Auth Route', () => {
         token: response.body.refreshToken.token,
       });
       expect(dbRefreshToken).to.be.ok;
-      expect(dbRefreshToken.user.toHexString()).to.be.equal(userOne._id.toHexString());
+      expect(dbRefreshToken.user.toHexString()).to.be.equal(userOneId.toHexString());
       expect(dbRefreshToken.blacklisted).to.be.false;
+    });
+
+    it('should remove the used refresh token if request was successful', async () => {
+      await exec();
+
+      const dbRefreshToken = await RefreshToken.findOne({ token: refreshToken });
+      expect(dbRefreshToken).not.to.be.ok;
     });
 
     it('should return an error if refresh token is missing', async () => {
       refreshToken = null;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
+    });
+
+    const checkInvalidRefreshAttempt = async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(response.body.status).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(response.body.error).to.be.equal(httpStatus[httpStatus.UNAUTHORIZED]);
+      expect(response.body.message).to.be.equal('Please authenticate');
+    };
+
+    it('should return an error if the refresh token is signed by an invalid secret', async () => {
+      refreshToken = generateToken(userOneId, refreshTokenExpires, 'invalidSecret');
+      await checkInvalidRefreshAttempt();
+    });
+
+    it('should return an error if the refresh token is not found', async () => {
+      refreshToken = generateToken(userOneId, refreshTokenExpires);
+      await checkInvalidRefreshAttempt();
+    });
+
+    const insertRefreshToken = async (_id, expires, blacklisted = false) => {
+      const refreshTokenObject = {
+        token: refreshToken,
+        user: _id,
+        expires,
+        blacklisted,
+      };
+      await new RefreshToken(refreshTokenObject).save();
+    };
+
+    it('should return an error if the refresh token is for another user', async () => {
+      const anotherUserId = mongoose.Types.ObjectId();
+      refreshToken = generateToken(anotherUserId, refreshTokenExpires);
+      await insertRefreshToken(userOneId, refreshTokenExpires);
+      await checkInvalidRefreshAttempt();
+    });
+
+    it('should return an error if the refresh token is blacklisted', async () => {
+      refreshToken = generateToken(userOneId, refreshTokenExpires);
+      await insertRefreshToken(userOneId, refreshTokenExpires, true);
+      await checkInvalidRefreshAttempt();
+    });
+
+    it('should return an error if the refresh token is expired', async () => {
+      refreshTokenExpires = refreshTokenExpires.subtract(jwtConfig.refreshExpirationDays, 'days');
+      refreshToken = generateToken(userOneId, refreshTokenExpires);
+      await insertRefreshToken(userOneId, refreshTokenExpires);
+      await checkInvalidRefreshAttempt();
+    });
+
+    it('should return an error if user is not found', async () => {
+      const anotherUserId = mongoose.Types.ObjectId();
+      refreshToken = generateToken(anotherUserId, refreshTokenExpires);
+      await insertRefreshToken(anotherUserId, refreshTokenExpires);
+      await checkInvalidRefreshAttempt();
     });
   });
 });

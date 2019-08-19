@@ -37,11 +37,7 @@ refreshTokenSchema.statics.generate = async function(user) {
   const token = jwt.sign(payload, jwtConfig.secret);
 
   const refreshToken = new RefreshToken({ token, user: userId, expires: expires.toDate() });
-  try {
-    await refreshToken.save();
-  } catch (error) {
-    throw Boom.badImplementation();
-  }
+  await refreshToken.save();
 
   return refreshToken;
 };
