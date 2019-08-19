@@ -25,7 +25,14 @@ const login = {
   }),
 };
 
+const refresh = {
+  body: Joi.object().keys({
+    refreshToken: Joi.string().required(),
+  }),
+};
+
 module.exports = {
   register,
   login,
+  refresh,
 };

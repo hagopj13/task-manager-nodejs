@@ -46,6 +46,24 @@ refreshTokenSchema.statics.generate = async function(user) {
   return refreshToken;
 };
 
+refreshTokenSchema.statics.verify = async function(token) {
+  const unauthorizedError = Boom.unauthorized('Please authenticate');
+  try {
+    const payload = jwt.verify(token, jwtConfig.secret);
+    const refreshToken = await RefreshToken.findOneAndDelete({
+      token,
+      user: payload.sub,
+      blacklisted: false,
+    });
+    if (!refreshToken || moment(refreshToken.expires).isBefore()) {
+      throw unauthorizedError;
+    }
+    return refreshToken;
+  } catch (error) {
+    throw unauthorizedError;
+  }
+};
+
 refreshTokenSchema.methods.transform = function() {
   const refreshToken = this;
   return pick(refreshToken, ['token', 'expires']);

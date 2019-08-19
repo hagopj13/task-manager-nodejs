@@ -1,5 +1,7 @@
 const httpStatus = require('http-status');
+const Boom = require('boom');
 const User = require('../models/user.model');
+const RefreshToken = require('../models/refreshToken.model');
 const asyncController = require('../middlewares/controller');
 
 const register = asyncController(async (req, res) => {
@@ -9,7 +11,7 @@ const register = asyncController(async (req, res) => {
   const tokens = await user.generateAuthTokens();
   const response = {
     user: user.transform(),
-    tokens,
+    ...tokens,
   };
   res.status(httpStatus.CREATED).send(response);
 });
@@ -19,12 +21,24 @@ const login = asyncController(async (req, res) => {
   const tokens = await user.generateAuthTokens();
   const response = {
     user: user.transform(),
-    tokens,
+    ...tokens,
   };
+  res.send(response);
+});
+
+const refresh = asyncController(async (req, res) => {
+  const refreshToken = await RefreshToken.verify(req.body.refreshToken);
+  const user = await User.findById(refreshToken.user);
+  if (!user) {
+    throw Boom.unauthorized('Please authenticate');
+  }
+  const tokens = await user.generateAuthTokens();
+  const response = { ...tokens };
   res.send(response);
 });
 
 module.exports = {
   register,
   login,
+  refresh,
 };
