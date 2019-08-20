@@ -1,16 +1,24 @@
 const mongoose = require('mongoose');
 const { expect } = require('chai');
 const request = require('supertest');
+const sinon = require('sinon');
 const httpStatus = require('http-status');
+const httpMocks = require('node-mocks-http');
 const moment = require('moment');
 const { pick } = require('lodash');
 const app = require('../../app');
 const User = require('../../models/user.model');
 const RefreshToken = require('../../models/refreshToken.model');
 const { jwt: jwtConfig } = require('../../config/config');
-const { setupUsers } = require('../fixtures');
-const { userOne, userOneId, userOneRefreshToken } = require('../fixtures/user.fixtures');
+const auth = require('../../middlewares/auth');
 const { generateToken } = require('../../utils/auth.util');
+const { setupUsers } = require('../fixtures');
+const {
+  userOne,
+  userOneId,
+  userOneRefreshToken,
+  userOneAccessToken,
+} = require('../fixtures/user.fixtures');
 
 describe('Auth Route', () => {
   beforeEach(async () => {
@@ -197,12 +205,12 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensInResponse(response);
 
-      const dbRefreshToken = await RefreshToken.findOne({
+      const newRefreshToken = await RefreshToken.findOne({
         token: response.body.refreshToken.token,
       });
-      expect(dbRefreshToken).to.be.ok;
-      expect(dbRefreshToken.user.toHexString()).to.be.equal(userOneId.toHexString());
-      expect(dbRefreshToken.blacklisted).to.be.false;
+      expect(newRefreshToken).to.be.ok;
+      expect(newRefreshToken.user.toHexString()).to.be.equal(userOneId.toHexString());
+      expect(newRefreshToken.blacklisted).to.be.false;
     });
 
     it('should remove the used refresh token if request was successful', async () => {
@@ -260,7 +268,10 @@ describe('Auth Route', () => {
     });
 
     it('should return an error if the refresh token is expired', async () => {
-      refreshTokenExpires = refreshTokenExpires.subtract(jwtConfig.refreshExpirationDays, 'days');
+      refreshTokenExpires = refreshTokenExpires.subtract(
+        jwtConfig.refreshExpirationDays + 1,
+        'days'
+      );
       refreshToken = generateToken(userOneId, refreshTokenExpires);
       await insertRefreshToken(userOneId, refreshTokenExpires);
       await checkInvalidRefreshAttempt();
@@ -271,6 +282,79 @@ describe('Auth Route', () => {
       refreshToken = generateToken(anotherUserId, refreshTokenExpires);
       await insertRefreshToken(anotherUserId, refreshTokenExpires);
       await checkInvalidRefreshAttempt();
+    });
+  });
+
+  describe('Auth middleware', () => {
+    let req;
+    let res;
+    let nextSpy;
+    let accessToken;
+    let expires;
+
+    beforeEach(() => {
+      res = httpMocks.createResponse();
+      nextSpy = sinon.spy();
+      accessToken = userOneAccessToken;
+      expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
+    });
+
+    const exec = async () => {
+      req = httpMocks.createRequest({
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const authMiddleware = auth();
+      await authMiddleware(req, res, nextSpy);
+    };
+
+    it('should call next with no arguments if valid access token', async () => {
+      await exec();
+      expect(nextSpy.calledOnce).to.be.true;
+      expect(nextSpy.firstCall.args.length).to.be.equal(0);
+      expect(req.user).to.be.ok;
+      expect(req.user._id).to.deep.equal(userOneId);
+    });
+
+    const checkInvalidAuthAttempt = async () => {
+      await exec();
+      expect(nextSpy.calledOnce).to.be.true;
+      expect(nextSpy.firstCall.args.length).to.be.equal(1);
+      const nextArg = nextSpy.firstCall.args[0];
+      expect(nextArg).to.be.ok;
+      expect(nextArg.isBoom).to.be.true;
+      const { statusCode, error, message } = nextArg.output.payload;
+      expect(statusCode).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(error).to.be.equal(httpStatus[httpStatus.UNAUTHORIZED]);
+      expect(message).to.be.equal('Please authenticate');
+    };
+
+    it('should call next with an error if token is generated with an invalid secret', async () => {
+      accessToken = generateToken(userOneId, expires, 'invalidSecret');
+      await checkInvalidAuthAttempt();
+    });
+
+    it('should call next with an error if token is expired', async () => {
+      const expired = expires.subtract(jwtConfig.accessExpirationMinutes + 1, 'minutes');
+      accessToken = generateToken(userOneId, expired);
+      await checkInvalidAuthAttempt();
+    });
+
+    it('should call next with an error if user is not found', async () => {
+      const invalidUserId = mongoose.Types.ObjectId();
+      accessToken = generateToken(invalidUserId, expires);
+      await checkInvalidAuthAttempt();
+    });
+
+    it('should call next with an error if access token is not found in header', async () => {
+      accessToken = null;
+      await checkInvalidAuthAttempt();
+    });
+
+    it('should call next with an error if access token is not a valid jwt', async () => {
+      accessToken = 'randomString';
+      await checkInvalidAuthAttempt();
     });
   });
 });

@@ -1,19 +1,29 @@
 const passport = require('passport');
 const Boom = require('boom');
 
-const jwtCallback = (req, res, next) => async (err, user, info) => {
+const verifyCallback = (req, resolve, reject) => async (err, user, info) => {
   const unauthorizedError = Boom.unauthorized('Please authenticate');
-  if (err || info) {
-    return next(unauthorizedError);
+  if (err || info || !user) {
+    return reject(unauthorizedError);
   }
   req.user = user;
-  // manage access rights here
+  // TODO: manage access rights
 
-  next();
+  resolve();
 };
 
-const auth = () => (req, res, next) => {
-  passport.authenticate('jwt', { session: false }, jwtCallback(req, res, next))(req, res, next);
+const auth = () => async (req, res, next) => {
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line
+    // prettier-ignore
+    passport.authenticate(
+      'jwt',
+      { session: false },
+      verifyCallback(req, resolve, reject)
+    )(req, res, next);
+  })
+    .then(() => next())
+    .catch(err => next(err));
 };
 
 module.exports = auth;
