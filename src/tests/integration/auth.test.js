@@ -9,12 +9,8 @@ const User = require('../../models/user.model');
 const RefreshToken = require('../../models/refreshToken.model');
 const { jwt: jwtConfig } = require('../../config/config');
 const { setupUsers } = require('../fixtures');
-const {
-  userOne,
-  userOneId,
-  userOneRefreshToken,
-  generateToken,
-} = require('../fixtures/user.fixtures');
+const { userOne, userOneId, userOneRefreshToken } = require('../fixtures/user.fixtures');
+const { generateToken } = require('../../utils/auth.util');
 
 describe('Auth Route', () => {
   beforeEach(async () => {

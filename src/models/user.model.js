@@ -4,9 +4,9 @@ const bcrypt = require('bcryptjs');
 const Boom = require('boom');
 const moment = require('moment');
 const { pick, omit } = require('lodash');
-const jwt = require('jsonwebtoken');
 const { jwt: jwtConfig } = require('../config/config');
 const RefreshToken = require('./refreshToken.model');
+const { generateToken } = require('../utils/auth.util');
 
 const userSchema = mongoose.Schema(
   {
@@ -71,14 +71,9 @@ userSchema.statics.findByCredentials = async function(email, password) {
 userSchema.methods.generateAuthTokens = async function() {
   const user = this;
   const expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
-  const payload = {
-    sub: user._id,
-    iat: moment().unix(),
-    exp: expires.unix(),
-  };
-  const token = jwt.sign(payload, jwtConfig.secret);
-  const accessToken = { token, expires: expires.toDate() };
+  const token = generateToken(user._id, expires);
 
+  const accessToken = { token, expires: expires.toDate() };
   const refreshToken = await RefreshToken.generate(user);
 
   return {

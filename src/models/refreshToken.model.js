@@ -4,6 +4,7 @@ const moment = require('moment');
 const Boom = require('boom');
 const { pick } = require('lodash');
 const { jwt: jwtConfig } = require('../config/config');
+const { generateToken } = require('../utils/auth.util');
 
 const refreshTokenSchema = mongoose.Schema({
   token: {
@@ -29,12 +30,7 @@ const refreshTokenSchema = mongoose.Schema({
 refreshTokenSchema.statics.generate = async function(user) {
   const userId = user._id;
   const expires = moment().add(jwtConfig.refreshExpirationDays, 'days');
-  const payload = {
-    sub: userId,
-    iat: moment().unix(),
-    exp: expires.unix(),
-  };
-  const token = jwt.sign(payload, jwtConfig.secret);
+  const token = generateToken(userId, expires);
 
   const refreshToken = new RefreshToken({ token, user: userId, expires: expires.toDate() });
   await refreshToken.save();
