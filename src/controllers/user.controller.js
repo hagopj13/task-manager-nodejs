@@ -1,6 +1,6 @@
-const asyncController = require('../middlewares/controller');
+const { catchAsync } = require('../utils/controller.utils');
 
-const currentUser = asyncController(async (req, res) => {
+const currentUser = catchAsync(async (req, res) => {
   res.send(req.user.transform());
 });
 

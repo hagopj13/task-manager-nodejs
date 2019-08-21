@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { expect } = require('chai');
-const User = require('../../models/user.model');
-const { userOne } = require('../fixtures/user.fixtures');
+const User = require('../../../models/user.model');
+const { userOne } = require('../../fixtures/user.fixtures');
 
 describe('User model unit tests', () => {
   after(() => {

@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
 const httpStatus = require('http-status');
-const asyncController = require('../../middlewares/controller');
+const { catchAsync } = require('../../../utils/controller.utils');
 
 describe('Contoller middleware tests', () => {
   describe('Async controller', () => {
@@ -21,15 +21,15 @@ describe('Contoller middleware tests', () => {
 
     it('should not call next if no errors take place', async () => {
       const fn = () => Promise.resolve();
-      const controllerMiddleware = asyncController(fn);
-      await controllerMiddleware(req, res, nextSpy);
+      const asyncController = catchAsync(fn);
+      await asyncController(req, res, nextSpy);
       expect(nextSpy.called).to.be.false;
     });
 
     const generateError = async error => {
       const fn = () => Promise.reject(error);
-      const controllerMiddleware = asyncController(fn, defaultStatusCode);
-      await controllerMiddleware(req, res, nextSpy);
+      const asyncController = catchAsync(fn, defaultStatusCode);
+      await asyncController(req, res, nextSpy);
       expect(nextSpy.calledOnce).to.be.true;
       return nextSpy.firstCall.args[0];
     };

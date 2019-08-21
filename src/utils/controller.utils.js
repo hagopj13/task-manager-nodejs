@@ -1,4 +1,4 @@
-const asyncController = (fn, defaultCode = 500) => (req, res, next) => {
+const catchAsync = (fn, defaultCode = 500) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(err => {
     const error = err;
     if (!error.isBoom && !error.statusCode) {
@@ -8,4 +8,6 @@ const asyncController = (fn, defaultCode = 500) => (req, res, next) => {
   });
 };
 
-module.exports = asyncController;
+module.exports = {
+  catchAsync,
+};
