@@ -154,12 +154,12 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
     };
 
-    it('should return an error if email is missing', async () => {
+    it('should return a 400 error if email is missing', async () => {
       delete loginCredentials.email;
       await checkLoginValidationError();
     });
 
-    it('should return an error if password is missing', async () => {
+    it('should return a 400 error if password is missing', async () => {
       delete loginCredentials.password;
       await checkLoginValidationError();
     });
@@ -175,12 +175,12 @@ describe('Auth Route', () => {
       expect(response.body).to.be.deep.equal(expectedError);
     };
 
-    it('should return an error if user with such an email is not found', async () => {
+    it('should return a 401 error if user with such an email is not found', async () => {
       loginCredentials.email = 'unknownEmail@example.com';
       await checkLoginAttemptError();
     });
 
-    it('should return an error if user password is wrong', async () => {
+    it('should return a 401 error if user password is wrong', async () => {
       loginCredentials.password = 'wrongPassword';
       await checkLoginAttemptError();
     });
