@@ -5,7 +5,7 @@ const updateUserBody = Joi.object().keys({
   password: Joi.string().min(8).regex(/^((?!password).)*$/im),
   name: Joi.string().max(128),
   age: Joi.number().integer().min(0),
-});
+}).min(1);
 
 const updateCurrentUser = {
   body: updateUserBody,

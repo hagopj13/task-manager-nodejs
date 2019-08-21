@@ -2,9 +2,10 @@ const { expect } = require('chai');
 const request = require('supertest');
 const httpStatus = require('http-status');
 const app = require('../../app');
-const { checkUnauthorizedError } = require('../../utils/test.util');
+const User = require('../../models/user.model');
+const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
 const { setupUsers } = require('../fixtures');
-const { userOneAccessToken, userOne } = require('../fixtures/user.fixtures');
+const { userOneAccessToken, userOne, userTwo } = require('../fixtures/user.fixtures');
 
 describe('User Route', () => {
   let accessToken;
@@ -52,14 +53,74 @@ describe('User Route', () => {
         .send(updateBody);
     };
 
-    it('should update user if everything is correct', async () => {
-      // const response = await exec();
+    it('should update user if input is correct', async () => {
+      updateBody = {
+        email: 'valid@example.com',
+        password: 'Red123456!',
+        name: 'New name',
+        age: 23,
+      };
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+
+      const { password } = updateBody;
+      delete updateBody.password;
+      expect(response.body).to.include(updateBody);
+      expect(response.body).not.to.have.property('password');
+      expect(response.body).to.have.property('id');
+
+      const dbUser = await User.findById(userOne._id);
+      expect(dbUser).to.be.ok;
+      expect(dbUser).to.include(updateBody);
+      expect(dbUser.password).not.to.be.equal(password);
     });
 
     it('should return error if access token is not valid', async () => {
       accessToken = null;
       const response = await exec();
       checkUnauthorizedError(response);
+    });
+
+    it('should return error if no update fields are specified', async () => {
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should return error if email is invalid', async () => {
+      updateBody.email = 'notValid';
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should return error if password contains the word password', async () => {
+      updateBody.email = 'Red1234!password';
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should return error if password is shorter than 8 characters', async () => {
+      updateBody.email = 'Red123!';
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should return error if age is less than 0', async () => {
+      updateBody.age = -1;
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should return an error if email is duplicate and is not my email', async () => {
+      updateBody.email = userTwo.email;
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should not return an error if email is duplicate but is my email', async () => {
+      updateBody.email = userOne.email;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.body.email).to.be.equal(updateBody.email);
     });
   });
 });

@@ -56,6 +56,7 @@ describe('Auth Route', () => {
     it('should register new user when request data is ok', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
+      const { password } = newUser;
       delete newUser.password;
       expect(response.body.user).to.include(newUser);
       expect(response.body.user).not.to.have.property('password');
@@ -64,7 +65,8 @@ describe('Auth Route', () => {
 
       const dbUser = await User.findById(response.body.user.id);
       expect(dbUser).to.be.ok;
-      expect(dbUser.password).not.to.be.equal(newUser.password);
+      expect(dbUser).to.include(newUser);
+      expect(dbUser.password).not.to.be.equal(password);
     });
 
     it('should return an error if email is missing', async () => {
@@ -91,7 +93,7 @@ describe('Auth Route', () => {
       checkValidationError(response);
     });
 
-    it('should return an error if password is contains the word password', async () => {
+    it('should return an error if password contains the word password', async () => {
       newUser.password = 'Red1234!password';
       const response = await exec();
       checkValidationError(response);
