@@ -3,6 +3,7 @@ const { expect } = require('chai');
 const request = require('supertest');
 const httpStatus = require('http-status');
 const app = require('../../app');
+const { checkUnauthorizedError } = require('../../utils/test.util');
 const { setupUsers } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixtures');
 
@@ -40,11 +41,7 @@ describe('User Route', () => {
     it('should return error if access token is not valid', async () => {
       accessToken = null;
       const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.UNAUTHORIZED);
-      const { status, error, message } = response.body;
-      expect(status).to.be.equal(httpStatus.UNAUTHORIZED);
-      expect(error).to.be.equal(httpStatus[httpStatus.UNAUTHORIZED]);
-      expect(message).to.be.equal('Please authenticate');
+      checkUnauthorizedError(response);
     });
   });
 });
