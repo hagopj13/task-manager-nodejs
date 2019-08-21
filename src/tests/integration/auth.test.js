@@ -38,7 +38,7 @@ describe('Auth Route', () => {
 
   describe('POST /v1/auth/register', () => {
     let newUser;
-    beforeEach(async () => {
+    beforeEach(() => {
       newUser = {
         name: 'John Doe',
         email: 'john@example.com',
@@ -177,10 +177,10 @@ describe('Auth Route', () => {
 
   describe('POST /v1/auth/refreshToken', () => {
     let refreshToken;
-    let refreshTokenExpires;
+    const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
+
     beforeEach(() => {
       refreshToken = userOneRefreshToken;
-      refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
     });
 
     const exec = async () => {
@@ -201,7 +201,7 @@ describe('Auth Route', () => {
       expect(newRefreshToken.user.toHexString()).to.be.equal(userOneId.toHexString());
       expect(newRefreshToken.blacklisted).to.be.false;
 
-      const oldRefreshToken = await RefreshToken.findOne({ token: refreshToken });
+      const oldRefreshToken = await RefreshToken.findOne({ token: userOneRefreshToken });
       expect(oldRefreshToken).not.to.be.ok;
     });
 
@@ -249,12 +249,12 @@ describe('Auth Route', () => {
     });
 
     it('should return an error if the refresh token is expired', async () => {
-      refreshTokenExpires = refreshTokenExpires.subtract(
+      const refreshTokenExpired = refreshTokenExpires.subtract(
         jwtConfig.refreshExpirationDays + 1,
         'days'
       );
-      refreshToken = generateToken(userOneId, refreshTokenExpires);
-      await insertRefreshToken(userOneId, refreshTokenExpires);
+      refreshToken = generateToken(userOneId, refreshTokenExpired);
+      await insertRefreshToken(userOneId, refreshTokenExpired);
       const response = await exec();
       checkUnauthorizedError(response);
     });

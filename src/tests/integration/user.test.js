@@ -52,7 +52,7 @@ describe('User Route', () => {
         .send(updateBody);
     };
 
-    it('should return user profile if access token is valid', async () => {
+    it('should update user if everything is correct', async () => {
       // const response = await exec();
     });
 
