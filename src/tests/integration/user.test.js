@@ -26,7 +26,7 @@ describe('User Route', () => {
         .send();
     };
 
-    it('should successfully return user profile when everything is valid', async () => {
+    it('should return user profile if access token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       const user = response.body;
@@ -37,7 +37,7 @@ describe('User Route', () => {
       expect(user).to.have.property('age', 0);
     });
 
-    it('should return error if user does not have valid access token', async () => {
+    it('should return error if access token is not valid', async () => {
       accessToken = null;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.UNAUTHORIZED);
