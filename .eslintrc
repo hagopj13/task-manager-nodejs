@@ -9,6 +9,7 @@
     "no-console": "error",
     "func-names": "off",
     "consistent-return": "off",
+    "no-return-assign": ["error", "except-parens"],
     "no-underscore-dangle": "off",
     "no-use-before-define": ["error", { "variables": false }],
     "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],

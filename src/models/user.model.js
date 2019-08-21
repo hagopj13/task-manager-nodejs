@@ -49,8 +49,8 @@ const userSchema = mongoose.Schema(
   }
 );
 
-userSchema.statics.checkDuplicateEmail = async function(email) {
-  const user = await User.findOne({ email });
+userSchema.statics.checkDuplicateEmail = async function(email, currentUserId) {
+  const user = await User.findOne({ email, _id: { $ne: currentUserId } });
   if (user) {
     throw Boom.badRequest('Email is already used');
   }
