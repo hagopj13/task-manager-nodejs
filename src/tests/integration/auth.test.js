@@ -200,7 +200,7 @@ describe('Auth Route', () => {
         .send({ refreshToken });
     };
 
-    it('should successfully refresh access token for a valid refresh token', async () => {
+    it('should successfully refresh access token for a valid refresh token and delete old one', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensInResponse(response);
@@ -211,13 +211,9 @@ describe('Auth Route', () => {
       expect(newRefreshToken).to.be.ok;
       expect(newRefreshToken.user.toHexString()).to.be.equal(userOneId.toHexString());
       expect(newRefreshToken.blacklisted).to.be.false;
-    });
 
-    it('should remove the used refresh token if request was successful', async () => {
-      await exec();
-
-      const dbRefreshToken = await RefreshToken.findOne({ token: refreshToken });
-      expect(dbRefreshToken).not.to.be.ok;
+      const oldRefreshToken = await RefreshToken.findOne({ token: refreshToken });
+      expect(oldRefreshToken).not.to.be.ok;
     });
 
     it('should return an error if refresh token is missing', async () => {
