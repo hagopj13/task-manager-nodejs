@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const { expect } = require('chai');
 const request = require('supertest');
 const httpStatus = require('http-status');
@@ -8,18 +7,13 @@ const { setupUsers } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixtures');
 
 describe('User Route', () => {
+  let accessToken;
+  beforeEach(async () => {
+    await setupUsers();
+    accessToken = userOneAccessToken;
+  });
+
   describe('GET /v1/users/me', () => {
-    let accessToken;
-    beforeEach(async () => {
-      await setupUsers();
-      accessToken = userOneAccessToken;
-    });
-
-    after(() => {
-      mongoose.models = {};
-      mongoose.modelSchemas = {};
-    });
-
     const exec = async () => {
       return request(app)
         .get('/v1/users/me')
@@ -36,6 +30,30 @@ describe('User Route', () => {
       expect(user).to.have.property('email', userOne.email);
       expect(user).to.have.property('name', userOne.name);
       expect(user).to.have.property('age', 0);
+    });
+
+    it('should return error if access token is not valid', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+  });
+
+  describe('PATCH /v1/users/me', () => {
+    let updateBody;
+    beforeEach(() => {
+      updateBody = {};
+    });
+
+    const exec = async () => {
+      return request(app)
+        .patch('/v1/users/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updateBody);
+    };
+
+    it('should return user profile if access token is valid', async () => {
+      // const response = await exec();
     });
 
     it('should return error if access token is not valid', async () => {

@@ -26,11 +26,6 @@ describe('Auth Route', () => {
     await setupUsers();
   });
 
-  after(() => {
-    mongoose.models = {};
-    mongoose.modelSchemas = {};
-  });
-
   const checkTokensInResponse = response => {
     const { accessToken, refreshToken } = response.body;
     expect(accessToken).to.be.ok;
