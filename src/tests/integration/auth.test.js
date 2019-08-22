@@ -179,10 +179,11 @@ describe('Auth Route', () => {
 
   describe('POST /v1/auth/refreshToken', () => {
     let refreshToken;
-    const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
+    let refreshTokenExpires;
 
     beforeEach(() => {
       refreshToken = userOneRefreshToken;
+      refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
     });
 
     const exec = async () => {
