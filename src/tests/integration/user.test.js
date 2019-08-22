@@ -123,4 +123,27 @@ describe('User Route', () => {
       expect(response.body.email).to.be.equal(updateBody.email);
     });
   });
+
+  describe('DELETE /v1/users/me', () => {
+    const exec = async () => {
+      return request(app)
+        .delete('/v1/users/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+    };
+
+    it('should delete user if access token is valid', async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      const dbUser = await User.findById(userOne._id);
+      expect(dbUser).not.to.be.ok;
+    });
+
+    it('should return error if no access token is provided', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+  });
 });
