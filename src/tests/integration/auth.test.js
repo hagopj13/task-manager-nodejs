@@ -337,6 +337,18 @@ describe('Auth Route', () => {
       expect(message).to.be.equal('Please authenticate');
     };
 
+    it('should call next with an error if access token is not found in header', async () => {
+      accessToken = null;
+      await exec();
+      checkInvalidAuthAttempt();
+    });
+
+    it('should call next with an error if access token is not a valid jwt', async () => {
+      accessToken = 'randomString';
+      await exec();
+      checkInvalidAuthAttempt();
+    });
+
     it('should call next with an error if token is generated with an invalid secret', async () => {
       accessToken = generateToken(userOneId, expires, 'invalidSecret');
       await exec();
@@ -353,18 +365,6 @@ describe('Auth Route', () => {
     it('should call next with an error if user is not found', async () => {
       const invalidUserId = mongoose.Types.ObjectId();
       accessToken = generateToken(invalidUserId, expires);
-      await exec();
-      checkInvalidAuthAttempt();
-    });
-
-    it('should call next with an error if access token is not found in header', async () => {
-      accessToken = null;
-      await exec();
-      checkInvalidAuthAttempt();
-    });
-
-    it('should call next with an error if access token is not a valid jwt', async () => {
-      accessToken = 'randomString';
       await exec();
       checkInvalidAuthAttempt();
     });
