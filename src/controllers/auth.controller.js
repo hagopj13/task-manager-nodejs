@@ -37,8 +37,14 @@ const refreshToken = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const logoutAll = catchAsync(async (req, res) => {
+  await RefreshToken.deleteMany({ user: req.user._id });
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 module.exports = {
   register,
   login,
   refreshToken,
+  logoutAll,
 };
