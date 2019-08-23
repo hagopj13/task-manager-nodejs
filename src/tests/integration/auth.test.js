@@ -264,6 +264,35 @@ describe('Auth Route', () => {
     });
   });
 
+  describe('POST /v1/auth/logoutAll', () => {
+    let accessToken;
+
+    beforeEach(() => {
+      accessToken = userOneAccessToken;
+    });
+
+    const exec = async () => {
+      return request(app)
+        .post('/v1/auth/logoutAll')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+    };
+
+    it('should successfully delete all refresh tokens for the user', async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOneId });
+      expect(dbRefreshTokenCount).to.be.equal(0);
+    });
+
+    it('should return an error if no access token is provided', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+  });
+
   describe('Auth middleware', () => {
     let req;
     let res;
