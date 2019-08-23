@@ -5,7 +5,7 @@ const app = require('../../app');
 const User = require('../../models/user.model');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
 const { setupUsers } = require('../fixtures');
-const { userOneAccessToken, userOne, userTwo } = require('../fixtures/user.fixtures');
+const { userOneAccessToken, userOne, userOneId, userTwo } = require('../fixtures/user.fixtures');
 
 describe('User Route', () => {
   let accessToken;
@@ -27,7 +27,7 @@ describe('User Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       const user = response.body;
       expect(user).to.be.ok;
-      expect(user).to.have.property('id', userOne._id.toHexString());
+      expect(user).to.have.property('id', userOneId.toHexString());
       expect(user).to.have.property('email', userOne.email);
       expect(user).to.have.property('name', userOne.name);
       expect(user).to.have.property('age', 0);
@@ -69,7 +69,7 @@ describe('User Route', () => {
       expect(response.body).not.to.have.property('password');
       expect(response.body).to.have.property('id');
 
-      const dbUser = await User.findById(userOne._id);
+      const dbUser = await User.findById(userOneId);
       expect(dbUser).to.be.ok;
       expect(dbUser).to.include(updateBody);
       expect(dbUser.password).not.to.be.equal(password);
@@ -136,7 +136,7 @@ describe('User Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
-      const dbUser = await User.findById(userOne._id);
+      const dbUser = await User.findById(userOneId);
       expect(dbUser).not.to.be.ok;
     });
 

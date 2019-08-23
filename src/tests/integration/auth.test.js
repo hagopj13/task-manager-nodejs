@@ -178,12 +178,16 @@ describe('Auth Route', () => {
   });
 
   describe('POST /v1/auth/refreshToken', () => {
-    let refreshToken;
+    let userId;
     let refreshTokenExpires;
+    let blacklisted;
+    let refreshToken;
 
     beforeEach(() => {
-      refreshToken = userOneRefreshToken;
+      userId = userOneId;
       refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
+      blacklisted = false;
+      refreshToken = userOneRefreshToken;
     });
 
     const exec = async () => {
@@ -215,57 +219,46 @@ describe('Auth Route', () => {
     });
 
     it('should return an error if the refresh token is signed by an invalid secret', async () => {
-      refreshToken = generateToken(userOneId, refreshTokenExpires, 'invalidSecret');
+      refreshToken = generateToken(userId, refreshTokenExpires, 'invalidSecret');
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
     it('should return an error if the refresh token is not found', async () => {
-      refreshToken = generateToken(userOneId, refreshTokenExpires);
+      refreshToken = generateToken(userId, refreshTokenExpires);
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
-    const insertRefreshToken = async (_id, expires, blacklisted = false) => {
+    const generateAndSaveRefreshToken = async () => {
+      refreshToken = generateToken(userId, refreshTokenExpires);
+
       const refreshTokenObject = {
         token: refreshToken,
-        user: _id,
-        expires,
+        user: userId,
+        expires: refreshTokenExpires,
         blacklisted,
       };
       await new RefreshToken(refreshTokenObject).save();
     };
 
-    it('should return an error if the refresh token is for another user', async () => {
-      const anotherUserId = mongoose.Types.ObjectId();
-      refreshToken = generateToken(anotherUserId, refreshTokenExpires);
-      await insertRefreshToken(userOneId, refreshTokenExpires);
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
     it('should return an error if the refresh token is blacklisted', async () => {
-      refreshToken = generateToken(userOneId, refreshTokenExpires);
-      await insertRefreshToken(userOneId, refreshTokenExpires, true);
+      blacklisted = true;
+      await generateAndSaveRefreshToken();
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
     it('should return an error if the refresh token is expired', async () => {
-      const refreshTokenExpired = refreshTokenExpires.subtract(
-        jwtConfig.refreshExpirationDays + 1,
-        'days'
-      );
-      refreshToken = generateToken(userOneId, refreshTokenExpired);
-      await insertRefreshToken(userOneId, refreshTokenExpired);
+      refreshTokenExpires.subtract(jwtConfig.refreshExpirationDays + 1, 'days');
+      await generateAndSaveRefreshToken();
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
     it('should return an error if user is not found', async () => {
-      const anotherUserId = mongoose.Types.ObjectId();
-      refreshToken = generateToken(anotherUserId, refreshTokenExpires);
-      await insertRefreshToken(anotherUserId, refreshTokenExpires);
+      userId = mongoose.Types.ObjectId();
+      await generateAndSaveRefreshToken();
       const response = await exec();
       checkUnauthorizedError(response);
     });
@@ -322,8 +315,8 @@ describe('Auth Route', () => {
     });
 
     it('should call next with an error if token is expired', async () => {
-      const expired = expires.subtract(jwtConfig.accessExpirationMinutes + 1, 'minutes');
-      accessToken = generateToken(userOneId, expired);
+      expires.subtract(jwtConfig.accessExpirationMinutes + 1, 'minutes');
+      accessToken = generateToken(userOneId, expires);
       await exec();
       checkInvalidAuthAttempt();
     });
