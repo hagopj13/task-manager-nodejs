@@ -264,6 +264,35 @@ describe('Auth Route', () => {
     });
   });
 
+  describe('POST /v1/auth/logoutAll', () => {
+    let accessToken;
+
+    beforeEach(() => {
+      accessToken = userOneAccessToken;
+    });
+
+    const exec = async () => {
+      return request(app)
+        .post('/v1/auth/logoutAll')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+    };
+
+    it('should successfully delete all refresh tokens for the user', async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOneId });
+      expect(dbRefreshTokenCount).to.be.equal(0);
+    });
+
+    it('should return an error if no access token is provided', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+  });
+
   describe('Auth middleware', () => {
     let req;
     let res;
@@ -308,6 +337,18 @@ describe('Auth Route', () => {
       expect(message).to.be.equal('Please authenticate');
     };
 
+    it('should call next with an error if access token is not found in header', async () => {
+      accessToken = null;
+      await exec();
+      checkInvalidAuthAttempt();
+    });
+
+    it('should call next with an error if access token is not a valid jwt', async () => {
+      accessToken = 'randomString';
+      await exec();
+      checkInvalidAuthAttempt();
+    });
+
     it('should call next with an error if token is generated with an invalid secret', async () => {
       accessToken = generateToken(userOneId, expires, 'invalidSecret');
       await exec();
@@ -324,18 +365,6 @@ describe('Auth Route', () => {
     it('should call next with an error if user is not found', async () => {
       const invalidUserId = mongoose.Types.ObjectId();
       accessToken = generateToken(invalidUserId, expires);
-      await exec();
-      checkInvalidAuthAttempt();
-    });
-
-    it('should call next with an error if access token is not found in header', async () => {
-      accessToken = null;
-      await exec();
-      checkInvalidAuthAttempt();
-    });
-
-    it('should call next with an error if access token is not a valid jwt', async () => {
-      accessToken = 'randomString';
       await exec();
       checkInvalidAuthAttempt();
     });
