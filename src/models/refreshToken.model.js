@@ -6,26 +6,31 @@ const { pick } = require('lodash');
 const { jwt: jwtConfig } = require('../config/config');
 const { generateToken } = require('../utils/auth.util');
 
-const refreshTokenSchema = mongoose.Schema({
-  token: {
-    type: String,
-    required: true,
-    index: true,
+const refreshTokenSchema = mongoose.Schema(
+  {
+    token: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    expires: {
+      type: Date,
+      required: true,
+    },
+    blacklisted: {
+      type: Boolean,
+      default: false,
+    },
   },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  expires: {
-    type: Date,
-    required: true,
-  },
-  blacklisted: {
-    type: Boolean,
-    default: false,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
 
 refreshTokenSchema.statics.generate = async function(user) {
   const userId = user._id;
