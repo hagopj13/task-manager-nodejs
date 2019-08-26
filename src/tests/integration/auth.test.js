@@ -14,12 +14,7 @@ const auth = require('../../middlewares/auth');
 const { generateToken } = require('../../utils/auth.util');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
-const {
-  userOne,
-  userOneId,
-  userOneRefreshToken,
-  userOneAccessToken,
-} = require('../fixtures/user.fixtures');
+const { userOne, userOneRefreshToken, userOneAccessToken } = require('../fixtures/user.fixture');
 
 describe('Auth Route', () => {
   beforeEach(async () => {
@@ -146,7 +141,7 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensInResponse(response);
 
-      const dbUser = await User.findById(userOneId);
+      const dbUser = await User.findById(userOne._id);
       expect(response.body.user).to.be.deep.equal(pick(dbUser, ['id', 'email', 'name', 'age']));
     });
 
@@ -184,7 +179,7 @@ describe('Auth Route', () => {
     let refreshToken;
 
     beforeEach(() => {
-      userId = userOneId;
+      userId = userOne._id;
       refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
       blacklisted = false;
       refreshToken = userOneRefreshToken;
@@ -205,7 +200,7 @@ describe('Auth Route', () => {
         token: response.body.refreshToken.token,
       });
       expect(newRefreshToken).to.be.ok;
-      expect(newRefreshToken.user.toHexString()).to.be.equal(userOneId.toHexString());
+      expect(newRefreshToken.user.toHexString()).to.be.equal(userOne._id.toHexString());
       expect(newRefreshToken.blacklisted).to.be.false;
 
       const oldRefreshToken = await RefreshToken.findOne({ token: userOneRefreshToken });
@@ -282,7 +277,7 @@ describe('Auth Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
-      const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOneId });
+      const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOne._id });
       expect(dbRefreshTokenCount).to.be.equal(0);
     });
 
@@ -322,7 +317,7 @@ describe('Auth Route', () => {
       expect(nextSpy.calledOnce).to.be.true;
       expect(nextSpy.firstCall.args.length).to.be.equal(0);
       expect(req.user).to.be.ok;
-      expect(req.user._id).to.deep.equal(userOneId);
+      expect(req.user._id).to.deep.equal(userOne._id);
     });
 
     const checkInvalidAuthAttempt = () => {
@@ -350,14 +345,14 @@ describe('Auth Route', () => {
     });
 
     it('should call next with an error if token is generated with an invalid secret', async () => {
-      accessToken = generateToken(userOneId, expires, 'invalidSecret');
+      accessToken = generateToken(userOne._id, expires, 'invalidSecret');
       await exec();
       checkInvalidAuthAttempt();
     });
 
     it('should call next with an error if token is expired', async () => {
       expires.subtract(jwtConfig.accessExpirationMinutes + 1, 'minutes');
-      accessToken = generateToken(userOneId, expires);
+      accessToken = generateToken(userOne._id, expires);
       await exec();
       checkInvalidAuthAttempt();
     });

@@ -8,24 +8,22 @@ const { generateToken } = require('../../utils/auth.util');
 const accessTokenExpires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
 const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
 
-const userOneId = mongoose.Types.ObjectId();
 const userOne = {
-  _id: userOneId,
+  _id: mongoose.Types.ObjectId(),
   name: 'User One',
   email: 'user1@example.com',
   password: 'Red1234!',
 };
-const userOneAccessToken = generateToken(userOneId, accessTokenExpires);
-const userOneRefreshToken = generateToken(userOneId, refreshTokenExpires);
+const userOneAccessToken = generateToken(userOne._id, accessTokenExpires);
+const userOneRefreshToken = generateToken(userOne._id, refreshTokenExpires);
 const userOneRefreshTokenObj = {
   token: userOneRefreshToken,
-  user: userOneId,
+  user: userOne._id,
   expires: refreshTokenExpires.toDate(),
 };
 
-const userTwoId = mongoose.Types.ObjectId();
 const userTwo = {
-  _id: userTwoId,
+  _id: mongoose.Types.ObjectId(),
   name: 'User Two',
   email: 'user2@example.com',
   password: 'Blue1234!',
@@ -38,11 +36,9 @@ const setupUsers = async () => {
 };
 
 module.exports = {
-  userOneId,
   userOne,
   userOneAccessToken,
   userOneRefreshToken,
-  userTwoId,
   userTwo,
   setupUsers,
 };
