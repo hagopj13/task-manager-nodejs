@@ -7,6 +7,13 @@ const createTask = {
   }),
 };
 
+const getTask = {
+  params: Joi.object().keys({
+    taskId: Joi.string().required()
+  })
+}
+
 module.exports = {
   createTask,
+  getTask,
 }
