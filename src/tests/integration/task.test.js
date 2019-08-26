@@ -35,6 +35,7 @@ describe('Task Route', () => {
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.body).to.include(newTask);
       expect(response.body).to.have.property('id');
+      expect(response.body.owner).to.be.equal(userOne._id);
 
       const dbTask = await Task.findById(response.body.id);
       expect(dbTask).to.be.ok;
