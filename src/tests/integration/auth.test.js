@@ -13,7 +13,7 @@ const { jwt: jwtConfig } = require('../../config/config');
 const auth = require('../../middlewares/auth');
 const { generateToken } = require('../../utils/auth.util');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
-const { setupUsers } = require('../fixtures');
+const { resetDatabase } = require('../fixtures');
 const {
   userOne,
   userOneId,
@@ -23,7 +23,7 @@ const {
 
 describe('Auth Route', () => {
   beforeEach(async () => {
-    await setupUsers();
+    await resetDatabase();
   });
 
   const checkTokensInResponse = response => {

@@ -4,13 +4,13 @@ const httpStatus = require('http-status');
 const app = require('../../app');
 const User = require('../../models/user.model');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
-const { setupUsers } = require('../fixtures');
+const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne, userOneId, userTwo } = require('../fixtures/user.fixtures');
 
 describe('User Route', () => {
   let accessToken;
   beforeEach(async () => {
-    await setupUsers();
+    await resetDatabase();
     accessToken = userOneAccessToken;
   });
 

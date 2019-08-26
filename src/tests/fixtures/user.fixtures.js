@@ -32,8 +32,6 @@ const userTwo = {
 };
 
 const setupUsers = async () => {
-  await User.deleteMany();
-  await RefreshToken.deleteMany();
   await new User(userOne).save();
   await new User(userTwo).save();
   await new RefreshToken(userOneRefreshTokenObj).save();
