@@ -7,7 +7,7 @@ const { checkValidationError, checkUnauthorizedError } = require('../../utils/te
 const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
 
-describe.only('Task Route', () => {
+describe('Task Route', () => {
   let accessToken;
   beforeEach(async () => {
     await resetDatabase();
