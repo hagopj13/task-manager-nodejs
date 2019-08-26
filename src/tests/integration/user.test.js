@@ -30,7 +30,7 @@ describe('User Route', () => {
       expect(user).to.have.property('id', userOne._id.toHexString());
       expect(user).to.have.property('email', userOne.email);
       expect(user).to.have.property('name', userOne.name);
-      expect(user).to.have.property('age', 0);
+      expect(user).to.have.property('age', userOne.age || 0);
     });
 
     it('should return error if access token is not valid', async () => {
