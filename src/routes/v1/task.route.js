@@ -8,6 +8,9 @@ const router = express.Router();
 
 router.route('/').post(auth(), validate(validation.createTask), controller.createTask);
 
-router.route('/:taskId').get(auth(), validate(validation.getTask), controller.getTask);
+router
+  .route('/:taskId')
+  .get(auth(), validate(validation.getTask), controller.getTask)
+  .patch(auth(), validate(validation.updateTask), controller.updateTask);
 
 module.exports = router;

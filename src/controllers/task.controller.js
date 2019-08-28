@@ -17,7 +17,18 @@ const getTask = catchAsync(async (req, res) => {
   res.send(task.transform());
 });
 
+const updateTask = catchAsync(async (req, res) => {
+  const task = await Task.findOne({ _id: req.params.taskId, owner: req.user._id });
+  if (!task) {
+    throw Boom.notFound('Task not found');
+  }
+  Object.keys(req.body).forEach(update => (task[update] = req.body[update]));
+  await task.save();
+  res.send(task.transform());
+});
+
 module.exports = {
   createTask,
   getTask,
+  updateTask,
 };

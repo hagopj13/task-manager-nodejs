@@ -9,11 +9,22 @@ const createTask = {
 
 const getTask = {
   params: Joi.object().keys({
-    taskId: Joi.string().required()
-  })
-}
+    taskId: Joi.string().required(),
+  }),
+};
+
+const updateTask = {
+  params: Joi.object().keys({
+    taskId: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    description: Joi.string(),
+    completed: Joi.boolean(),
+  }).min(1),
+};
 
 module.exports = {
   createTask,
   getTask,
+  updateTask,
 }
