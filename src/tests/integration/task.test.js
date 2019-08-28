@@ -16,7 +16,7 @@ const checkTask = (retrievedTask, fixtureTask) => {
   expect(retrievedTask).to.have.property('owner', fixtureTask.owner.toHexString());
 };
 
-describe('Task Route', () => {
+describe.only('Task Route', () => {
   let accessToken;
   beforeEach(async () => {
     await resetDatabase();
@@ -110,6 +110,37 @@ describe('Task Route', () => {
       taskId = taskFour._id.toHexString();
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  });
+
+  describe('PATCH /v1/tasks/:taskId', () => {
+    let taskId;
+    let updateBody;
+    beforeEach(() => {
+      taskId = taskOne._id.toHexString();
+      updateBody = {};
+    });
+
+    const exec = async () => {
+      return request(app)
+        .patch(`/v1/tasks/${taskId}`)
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .send(updateBody);
+    };
+
+    it('should successfully update the task if input is correct', async () => {
+      updateBody = {
+        description: 'New task description',
+        completed: false,
+      };
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.body).to.include(updateBody);
+      expect(response.body).to.have.property('id');
+
+      const dbTask = await Task.findById(taskOne._id);
+      expect(dbTask).to.be.ok;
+      expect(dbTask).to.include(updateBody);
     });
   });
 });
