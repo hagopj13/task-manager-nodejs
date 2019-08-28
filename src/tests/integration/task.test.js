@@ -9,14 +9,7 @@ const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
 const { taskOne, taskFour } = require('../fixtures/task.fixture');
 
-const checkTask = (retrievedTask, fixtureTask) => {
-  expect(retrievedTask).to.have.property('id', fixtureTask._id.toHexString());
-  expect(retrievedTask).to.have.property('description', fixtureTask.description);
-  expect(retrievedTask).to.have.property('completed', fixtureTask.completed || false);
-  expect(retrievedTask).to.have.property('owner', fixtureTask.owner.toHexString());
-};
-
-describe.only('Task Route', () => {
+describe('Task Route', () => {
   let accessToken;
   beforeEach(async () => {
     await resetDatabase();
@@ -91,7 +84,10 @@ describe.only('Task Route', () => {
     it('should successfully return the task if everything is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTask(response.body, taskOne);
+      expect(response.body).to.have.property('id', taskOne._id.toHexString());
+      expect(response.body).to.have.property('description', taskOne.description);
+      expect(response.body).to.have.property('completed', taskOne.completed || false);
+      expect(response.body).to.have.property('owner', taskOne.owner.toHexString());
     });
 
     it('should return an error if access token is missing', async () => {
@@ -124,7 +120,7 @@ describe.only('Task Route', () => {
     const exec = async () => {
       return request(app)
         .patch(`/v1/tasks/${taskId}`)
-        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .send(updateBody);
     };
 
@@ -141,6 +137,35 @@ describe.only('Task Route', () => {
       const dbTask = await Task.findById(taskOne._id);
       expect(dbTask).to.be.ok;
       expect(dbTask).to.include(updateBody);
+    });
+
+    it('should return an error if access token is missing', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+
+    it('should return an error if task is not found', async () => {
+      taskId = mongoose.Types.ObjectId();
+      updateBody = {
+        completed: false,
+      };
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+
+    it('should return an error if task belongs to another user', async () => {
+      taskId = taskFour._id.toHexString();
+      updateBody = {
+        completed: false,
+      };
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+
+    it('should return an error if update body is empty', async () => {
+      const response = await exec();
+      checkValidationError(response);
     });
   });
 });
