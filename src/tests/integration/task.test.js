@@ -114,7 +114,10 @@ describe('Task Route', () => {
     let updateBody;
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
-      updateBody = {};
+      updateBody = {
+        description: 'New task description',
+        completed: false,
+      };
     });
 
     const exec = async () => {
@@ -125,10 +128,6 @@ describe('Task Route', () => {
     };
 
     it('should successfully update the task if input is correct', async () => {
-      updateBody = {
-        description: 'New task description',
-        completed: false,
-      };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body).to.include(updateBody);
@@ -145,27 +144,22 @@ describe('Task Route', () => {
       checkUnauthorizedError(response);
     });
 
+    it('should return an error if update body is empty', async () => {
+      updateBody = {};
+      const response = await exec();
+      checkValidationError(response);
+    });
+
     it('should return an error if task is not found', async () => {
       taskId = mongoose.Types.ObjectId();
-      updateBody = {
-        completed: false,
-      };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
 
     it('should return an error if task belongs to another user', async () => {
       taskId = taskFour._id.toHexString();
-      updateBody = {
-        completed: false,
-      };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-
-    it('should return an error if update body is empty', async () => {
-      const response = await exec();
-      checkValidationError(response);
     });
   });
 });
