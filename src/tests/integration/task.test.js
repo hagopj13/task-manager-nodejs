@@ -9,12 +9,33 @@ const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
 const { taskOne, taskFour } = require('../fixtures/task.fixture');
 
-describe('Task Route', () => {
+describe.only('Task Route', () => {
   let accessToken;
+  let taskId;
   beforeEach(async () => {
     await resetDatabase();
     accessToken = userOneAccessToken;
   });
+
+  const checkUserAccessOnTask = async exec => {
+    it('should return an error if access token is missing', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+
+    it('should return an error if task is not found', async () => {
+      taskId = mongoose.Types.ObjectId();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+
+    it('should return an error if task belongs to another user', async () => {
+      taskId = taskFour._id.toHexString();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  };
 
   describe('POST /v1/tasks', () => {
     let newTask;
@@ -69,7 +90,6 @@ describe('Task Route', () => {
   });
 
   describe('GET /v1/tasks/:taskId', () => {
-    let taskId;
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
     });
@@ -90,27 +110,12 @@ describe('Task Route', () => {
       expect(response.body).to.have.property('owner', taskOne.owner.toHexString());
     });
 
-    it('should return an error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    it('should return an error if task is not found', async () => {
-      taskId = mongoose.Types.ObjectId();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-
-    it('should return an error if task belongs to another user', async () => {
-      taskId = taskFour._id.toHexString();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    describe('should check user access right on task', async () => {
+      await checkUserAccessOnTask(exec);
     });
   });
 
   describe('PATCH /v1/tasks/:taskId', () => {
-    let taskId;
     let updateBody;
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
@@ -138,22 +143,8 @@ describe('Task Route', () => {
       expect(dbTask).to.include(updateBody);
     });
 
-    it('should return an error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    it('should return an error if task is not found', async () => {
-      taskId = mongoose.Types.ObjectId();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-
-    it('should return an error if task belongs to another user', async () => {
-      taskId = taskFour._id.toHexString();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    describe('should check user access right on task', async () => {
+      await checkUserAccessOnTask(exec);
     });
 
     it('should return an error if update body is empty', async () => {
@@ -164,7 +155,6 @@ describe('Task Route', () => {
   });
 
   describe('DELETE /v1/tasks/:taskId', () => {
-    let taskId;
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
     });
@@ -184,22 +174,8 @@ describe('Task Route', () => {
       expect(dbTask).not.to.be.ok;
     });
 
-    it('should return an error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    it('should return an error if task is not found', async () => {
-      taskId = mongoose.Types.ObjectId();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-
-    it('should return an error if task belongs to another user', async () => {
-      taskId = taskFour._id.toHexString();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    describe('should check user access rights on task', async () => {
+      await checkUserAccessOnTask(exec);
     });
   });
 });
