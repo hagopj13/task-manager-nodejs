@@ -3,6 +3,7 @@ const request = require('supertest');
 const httpStatus = require('http-status');
 const app = require('../../app');
 const User = require('../../models/user.model');
+const Task = require('../../models/task.model');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne, userTwo } = require('../fixtures/user.fixture');
@@ -138,6 +139,12 @@ describe('User Route', () => {
 
       const dbUser = await User.findById(userOne._id);
       expect(dbUser).not.to.be.ok;
+    });
+
+    it('should remove the tasks of the deleted user', async () => {
+      await exec();
+      const dbTasks = await Task.find({ owner: userOne._id });
+      expect(dbTasks.length).to.be.equal(0);
     });
 
     it('should return error if no access token is provided', async () => {

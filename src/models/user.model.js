@@ -6,6 +6,7 @@ const moment = require('moment');
 const { pick, omit } = require('lodash');
 const { jwt: jwtConfig } = require('../config/config');
 const RefreshToken = require('./refreshToken.model');
+const Task = require('./task.model');
 const { generateToken } = require('../utils/auth.util');
 
 const userSchema = mongoose.Schema(
@@ -103,6 +104,12 @@ userSchema.pre('save', async function(next) {
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);
   }
+  next();
+});
+
+userSchema.pre('remove', async function(next) {
+  const user = this;
+  await Task.deleteMany({ owner: user._id });
   next();
 });
 
