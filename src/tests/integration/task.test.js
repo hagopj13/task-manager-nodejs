@@ -144,12 +144,6 @@ describe('Task Route', () => {
       checkUnauthorizedError(response);
     });
 
-    it('should return an error if update body is empty', async () => {
-      updateBody = {};
-      const response = await exec();
-      checkValidationError(response);
-    });
-
     it('should return an error if task is not found', async () => {
       taskId = mongoose.Types.ObjectId();
       const response = await exec();
@@ -161,9 +155,15 @@ describe('Task Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
+
+    it('should return an error if update body is empty', async () => {
+      updateBody = {};
+      const response = await exec();
+      checkValidationError(response);
+    });
   });
 
-  describe.only('DELETE /v1/tasks/:taskId', () => {
+  describe('DELETE /v1/tasks/:taskId', () => {
     let taskId;
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
@@ -182,6 +182,24 @@ describe('Task Route', () => {
 
       const dbTask = await Task.findById(taskId);
       expect(dbTask).not.to.be.ok;
+    });
+
+    it('should return an error if access token is missing', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+
+    it('should return an error if task is not found', async () => {
+      taskId = mongoose.Types.ObjectId();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+
+    it('should return an error if task belongs to another user', async () => {
+      taskId = taskFour._id.toHexString();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
   });
 });
