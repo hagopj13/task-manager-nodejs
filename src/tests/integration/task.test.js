@@ -9,7 +9,7 @@ const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
 const { taskOne, taskFour } = require('../fixtures/task.fixture');
 
-describe.only('Task Route', () => {
+describe('Task Route', () => {
   let accessToken;
   let taskId;
   beforeEach(async () => {
