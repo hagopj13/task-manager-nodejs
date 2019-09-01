@@ -162,4 +162,26 @@ describe('Task Route', () => {
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
   });
+
+  describe.only('DELETE /v1/tasks/:taskId', () => {
+    let taskId;
+    beforeEach(() => {
+      taskId = taskOne._id.toHexString();
+    });
+
+    const exec = async () => {
+      return request(app)
+        .delete(`/v1/tasks/${taskId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+    };
+
+    it('should successfully delete the task if everything is correct', async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      const dbTask = await Task.findById(taskId);
+      expect(dbTask).not.to.be.ok;
+    });
+  });
 });
