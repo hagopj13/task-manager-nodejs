@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
 const Boom = require('boom');
-const Task = require('../models/task.model');
+const { Task } = require('../models');
 const { catchAsync } = require('../utils/controller.utils');
 
 const createTask = catchAsync(async (req, res) => {

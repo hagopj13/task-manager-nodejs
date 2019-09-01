@@ -1,7 +1,6 @@
 const httpStatus = require('http-status');
 const Boom = require('boom');
-const User = require('../models/user.model');
-const RefreshToken = require('../models/refreshToken.model');
+const { User, RefreshToken } = require('../models');
 const { catchAsync } = require('../utils/controller.utils');
 
 const register = catchAsync(async (req, res) => {

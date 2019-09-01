@@ -4,9 +4,9 @@ const bcrypt = require('bcryptjs');
 const Boom = require('boom');
 const moment = require('moment');
 const { pick, omit } = require('lodash');
-const { jwt: jwtConfig } = require('../config/config');
 const RefreshToken = require('./refreshToken.model');
 const Task = require('./task.model');
+const { jwt: jwtConfig } = require('../config/config');
 const { generateToken } = require('../utils/auth.util');
 
 const userSchema = mongoose.Schema(

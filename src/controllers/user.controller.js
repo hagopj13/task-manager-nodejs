@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
+const { User } = require('../models');
 const { catchAsync } = require('../utils/controller.utils');
-const User = require('../models/user.model');
 
 const getCurrentUser = catchAsync(async (req, res) => {
   res.send(req.user.transform());

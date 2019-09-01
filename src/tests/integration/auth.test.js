@@ -1,14 +1,13 @@
-const mongoose = require('mongoose');
 const { expect } = require('chai');
 const request = require('supertest');
 const sinon = require('sinon');
 const httpStatus = require('http-status');
 const httpMocks = require('node-mocks-http');
+const mongoose = require('mongoose');
 const moment = require('moment');
 const { pick } = require('lodash');
 const app = require('../../app');
-const User = require('../../models/user.model');
-const RefreshToken = require('../../models/refreshToken.model');
+const { User, RefreshToken } = require('../../models');
 const { jwt: jwtConfig } = require('../../config/config');
 const auth = require('../../middlewares/auth');
 const { generateToken } = require('../../utils/auth.util');

@@ -1,14 +1,8 @@
-const mongoose = require('mongoose');
 const { expect } = require('chai');
-const User = require('../../../models/user.model');
+const { User } = require('../../../models');
 const { userOne } = require('../../fixtures/user.fixture');
 
 describe('User model unit tests', () => {
-  after(() => {
-    mongoose.models = {};
-    mongoose.modelSchemas = {};
-  });
-
   describe('User validation', () => {
     let newUser;
     beforeEach(() => {
