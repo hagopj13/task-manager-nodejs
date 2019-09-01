@@ -49,6 +49,12 @@ const userSchema = mongoose.Schema(
   }
 );
 
+userSchema.virtual('tasks', {
+  ref: 'Task',
+  localField: '_id',
+  foreignField: 'owner',
+});
+
 userSchema.statics.checkDuplicateEmail = async function(email, currentUserId) {
   const user = await User.findOne({ email, _id: { $ne: currentUserId } });
   if (user) {
