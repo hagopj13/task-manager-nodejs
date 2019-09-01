@@ -23,8 +23,15 @@ const updateTask = {
   }).min(1),
 };
 
+const deleteTask = {
+  params: Joi.object().keys({
+    taskId: Joi.string().required(),
+  }),
+};
+
 module.exports = {
   createTask,
   getTask,
   updateTask,
+  deleteTask,
 }

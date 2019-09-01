@@ -11,6 +11,7 @@ router.route('/').post(auth(), validate(validation.createTask), controller.creat
 router
   .route('/:taskId')
   .get(auth(), validate(validation.getTask), controller.getTask)
-  .patch(auth(), validate(validation.updateTask), controller.updateTask);
+  .patch(auth(), validate(validation.updateTask), controller.updateTask)
+  .delete(auth(), validate(validation.deleteTask), controller.deleteTask);
 
 module.exports = router;

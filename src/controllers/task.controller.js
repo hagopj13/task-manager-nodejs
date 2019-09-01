@@ -27,8 +27,18 @@ const updateTask = catchAsync(async (req, res) => {
   res.send(task.transform());
 });
 
+const deleteTask = catchAsync(async (req, res) => {
+  const task = await Task.findOne({ _id: req.params.taskId, owner: req.user._id });
+  if (!task) {
+    throw Boom.notFound('Task not found');
+  }
+  await task.remove();
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 module.exports = {
   createTask,
   getTask,
   updateTask,
+  deleteTask,
 };
