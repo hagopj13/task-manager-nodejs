@@ -30,6 +30,8 @@ const taskFour = {
   owner: userTwo._id,
 };
 
+const userOneTasks = [taskOne, taskTwo, taskThree];
+
 const setupTasks = async () => {
   await new Task(taskOne).save();
   await new Task(taskTwo).save();
@@ -42,5 +44,6 @@ module.exports = {
   taskTwo,
   taskThree,
   taskFour,
+  userOneTasks,
   setupTasks,
 };

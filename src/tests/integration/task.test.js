@@ -7,9 +7,9 @@ const { Task } = require('../../models');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
-const { taskOne, taskFour } = require('../fixtures/task.fixture');
+const { taskOne, taskFour, userOneTasks } = require('../fixtures/task.fixture');
 
-describe('Task Route', () => {
+describe.only('Task Route', () => {
   let accessToken;
   let taskId;
   beforeEach(async () => {
@@ -35,6 +35,13 @@ describe('Task Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
+  };
+
+  const checkTaskFormat = (responseTask, expectedTask) => {
+    expect(responseTask).to.have.property('id', expectedTask._id.toHexString());
+    expect(responseTask).to.have.property('description', expectedTask.description);
+    expect(responseTask).to.have.property('completed', expectedTask.completed || false);
+    expect(responseTask).to.have.property('owner', expectedTask.owner.toHexString());
   };
 
   describe('POST /v1/tasks', () => {
@@ -89,6 +96,28 @@ describe('Task Route', () => {
     });
   });
 
+  describe('GET /v1/tasks', () => {
+    let query;
+    beforeEach(() => {
+      query = {};
+    });
+
+    const exec = async () => {
+      return request(app)
+        .get('/v1/tasks')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query(query)
+        .send();
+    };
+
+    it('should successfully get all the tasks that belong a specific user', async () => {
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.body.length).to.be.equal(userOneTasks.length);
+      checkTaskFormat(response.body[0], userOneTasks[0]);
+    });
+  });
+
   describe('GET /v1/tasks/:taskId', () => {
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
@@ -104,10 +133,7 @@ describe('Task Route', () => {
     it('should successfully return the task if everything is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body).to.have.property('id', taskOne._id.toHexString());
-      expect(response.body).to.have.property('description', taskOne.description);
-      expect(response.body).to.have.property('completed', taskOne.completed || false);
-      expect(response.body).to.have.property('owner', taskOne.owner.toHexString());
+      checkTaskFormat(response.body, taskOne);
     });
 
     describe('should check user access right on task', async () => {
