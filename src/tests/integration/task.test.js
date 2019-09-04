@@ -9,7 +9,7 @@ const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
 const { taskOne, taskFour, userOneTasks } = require('../fixtures/task.fixture');
 
-describe.only('Task Route', () => {
+describe('Task Route', () => {
   let accessToken;
   let taskId;
   beforeEach(async () => {
@@ -115,6 +115,48 @@ describe.only('Task Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(userOneTasks.length);
       checkTaskFormat(response.body[0], userOneTasks[0]);
+    });
+
+    it('should return only completed tasks if completed query param is set to true', async () => {
+      query.completed = true;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      const numCompleteTasks = userOneTasks.filter(task => task.completed).length;
+      expect(response.body.length).to.be.equal(numCompleteTasks);
+      expect(response.body[0]).to.have.property('completed', true);
+    });
+
+    it('should return only incomplete tasks if completed query param is set to false', async () => {
+      query.completed = false;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      const numIncompleteTasks = userOneTasks.filter(task => !task.completed).length;
+      expect(response.body.length).to.be.equal(numIncompleteTasks);
+      expect(response.body[0]).to.have.property('completed', false);
+    });
+
+    it('should sort tasks if sort query param is specified', async () => {
+      query.sort = '-completed';
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      const expectedTasksSorted = [...userOneTasks].sort((a, b) => b.completed - a.completed);
+      response.body.forEach((responseTask, index) => {
+        expect(responseTask.id).to.be.equal(expectedTasksSorted[index]._id.toHexString());
+      });
+    });
+
+    it('should limit tasks if limit query param is specified', async () => {
+      query.limit = 2;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.body.length).to.be.equal(query.limit);
+    });
+
+    it('should skip tasks if skip query param is specified', async () => {
+      query.skip = 2;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.body.length).to.be.equal(userOneTasks.length - query.skip);
     });
   });
 
