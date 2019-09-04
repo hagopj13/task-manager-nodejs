@@ -6,7 +6,10 @@ const { task: controller } = require('../../controllers');
 
 const router = express.Router();
 
-router.route('/').post(auth(), validate(validation.createTask), controller.createTask);
+router
+  .route('/')
+  .post(auth(), validate(validation.createTask), controller.createTask)
+  .get(auth(), validate(validation.getTasks), controller.getTasks);
 
 router
   .route('/:taskId')

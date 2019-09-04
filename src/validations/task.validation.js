@@ -7,6 +7,15 @@ const createTask = {
   }),
 };
 
+const getTasks = {
+  query: Joi.object().keys({
+    completed: Joi.boolean(),
+    sort: Joi.string(),
+    limit: Joi.number().integer(),
+    skip: Joi.number().integer(),
+  }),
+};
+
 const getTask = {
   params: Joi.object().keys({
     taskId: Joi.string().required(),
@@ -31,6 +40,7 @@ const deleteTask = {
 
 module.exports = {
   createTask,
+  getTasks,
   getTask,
   updateTask,
   deleteTask,

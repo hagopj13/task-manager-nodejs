@@ -9,6 +9,28 @@ const createTask = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(task.transform());
 });
 
+const getTasks = catchAsync(async (req, res) => {
+  const match = {};
+  if (typeof req.query.completed !== 'undefined') {
+    match.completed = req.query.completed === true;
+  }
+
+  await req.user
+    .populate({
+      path: 'tasks',
+      match,
+      options: {
+        limit: parseInt(req.query.limit, 10),
+        skip: parseInt(req.query.skip, 10),
+        sort: req.query.sort || {},
+      },
+    })
+    .execPopulate();
+
+  const tasks = req.user.tasks.map(task => task.transform());
+  res.send(tasks);
+});
+
 const getTaskOfUser = async (taskId, userId) => {
   const task = await Task.findOne({ _id: taskId, owner: userId });
   if (!task) {
@@ -37,6 +59,7 @@ const deleteTask = catchAsync(async (req, res) => {
 
 module.exports = {
   createTask,
+  getTasks,
   getTask,
   updateTask,
   deleteTask,
