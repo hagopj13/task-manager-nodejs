@@ -146,14 +146,14 @@ describe('Task Route', () => {
     });
 
     it('should limit tasks if limit query param is specified', async () => {
-      query.limit = 2;
+      query.limit = 1;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(query.limit);
     });
 
     it('should skip tasks if skip query param is specified', async () => {
-      query.skip = 2;
+      query.skip = 1;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(userOneTasks.length - query.skip);
