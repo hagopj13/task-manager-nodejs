@@ -17,26 +17,6 @@ describe('Task Route', () => {
     accessToken = userOneAccessToken;
   });
 
-  const checkUserAccessOnTask = async exec => {
-    it('should return an error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    it('should return an error if task is not found', async () => {
-      taskId = mongoose.Types.ObjectId();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-
-    it('should return an error if task belongs to another user', async () => {
-      taskId = taskFour._id.toHexString();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-  };
-
   const checkTaskFormat = (responseTask, expectedTask) => {
     expect(responseTask).to.have.property('id', expectedTask._id.toHexString());
     expect(responseTask).to.have.property('description', expectedTask.description);
@@ -160,6 +140,26 @@ describe('Task Route', () => {
     });
   });
 
+  const checkAccessRightsOnTask = async exec => {
+    it('should return an error if access token is missing', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+
+    it('should return an error if task is not found', async () => {
+      taskId = mongoose.Types.ObjectId();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+
+    it('should return an error if task belongs to another user', async () => {
+      taskId = taskFour._id.toHexString();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  };
+
   describe('GET /v1/tasks/:taskId', () => {
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
@@ -179,7 +179,7 @@ describe('Task Route', () => {
     });
 
     describe('should check user access right on task', async () => {
-      await checkUserAccessOnTask(exec);
+      await checkAccessRightsOnTask(exec);
     });
   });
 
@@ -212,7 +212,7 @@ describe('Task Route', () => {
     });
 
     describe('should check user access right on task', async () => {
-      await checkUserAccessOnTask(exec);
+      await checkAccessRightsOnTask(exec);
     });
 
     it('should return an error if update body is empty', async () => {
@@ -243,7 +243,7 @@ describe('Task Route', () => {
     });
 
     describe('should check user access rights on task', async () => {
-      await checkUserAccessOnTask(exec);
+      await checkAccessRightsOnTask(exec);
     });
   });
 });

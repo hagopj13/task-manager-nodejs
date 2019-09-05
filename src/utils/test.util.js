@@ -15,7 +15,15 @@ const checkUnauthorizedError = (response, message = 'Please authenticate') => {
   expect(response.body).to.have.property('message', message);
 };
 
+const checkForbiddenError = response => {
+  expect(response.status).to.be.equal(httpStatus.FORBIDDEN);
+  expect(response.body).to.have.property('status', httpStatus.FORBIDDEN);
+  expect(response.body).to.have.property('error', httpStatus[httpStatus.FORBIDDEN]);
+  expect(response.body).to.have.property('message', 'Forbidden');
+};
+
 module.exports = {
   checkValidationError,
   checkUnauthorizedError,
+  checkForbiddenError,
 };

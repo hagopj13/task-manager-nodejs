@@ -3,40 +3,75 @@ const request = require('supertest');
 const httpStatus = require('http-status');
 const app = require('../../app');
 const { User, Task } = require('../../models');
-const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
+const {
+  checkValidationError,
+  checkUnauthorizedError,
+  checkForbiddenError,
+} = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
-const { userOneAccessToken, userOne, userTwo } = require('../fixtures/user.fixture');
+const {
+  userOneAccessToken,
+  userOne,
+  userTwo,
+  adminAccessToken,
+} = require('../fixtures/user.fixture');
 
 describe('User Route', () => {
   let accessToken;
+  let userId;
   beforeEach(async () => {
     await resetDatabase();
     accessToken = userOneAccessToken;
   });
 
-  describe('GET /v1/users/me', () => {
+  const checkAccessRightsOnUser = async exec => {
+    it('should return a forbidden error if user is not an admin', async () => {
+      userId = userTwo._id.toHexString();
+      const response = await exec();
+      checkForbiddenError(response);
+    });
+
+    it('should allow the request if the user is an admin', async () => {
+      accessToken = adminAccessToken;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.OK);
+    });
+  };
+
+  describe.only('GET /v1/users/:userId', () => {
+    beforeEach(() => {
+      userId = userOne._id.toHexString();
+    });
+
     const exec = async () => {
       return request(app)
-        .get('/v1/users/me')
+        .get(`/v1/users/${userId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send();
+    };
+
+    const checkUserFormat = (responseUser, expectedUser) => {
+      expect(responseUser).to.have.property('id', expectedUser._id.toHexString());
+      expect(responseUser).to.have.property('email', expectedUser.email);
+      expect(responseUser).to.have.property('name', expectedUser.name);
+      expect(responseUser).to.have.property('age', expectedUser.age || 0);
+      expect(responseUser).to.have.property('role', expectedUser.role || 'user');
     };
 
     it('should return user profile if access token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      const user = response.body;
-      expect(user).to.be.ok;
-      expect(user).to.have.property('id', userOne._id.toHexString());
-      expect(user).to.have.property('email', userOne.email);
-      expect(user).to.have.property('name', userOne.name);
-      expect(user).to.have.property('age', userOne.age || 0);
+      checkUserFormat(response.body, userOne);
     });
 
     it('should return error if access token is not valid', async () => {
       accessToken = null;
       const response = await exec();
       checkUnauthorizedError(response);
+    });
+
+    describe('should check user access rights', async () => {
+      await checkAccessRightsOnUser(exec);
     });
   });
 
