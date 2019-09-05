@@ -8,8 +8,7 @@ const RefreshToken = require('./refreshToken.model');
 const Task = require('./task.model');
 const { jwt: jwtConfig } = require('../config/config');
 const { generateToken } = require('../utils/auth.util');
-
-const roles = ['user', 'admin'];
+const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {

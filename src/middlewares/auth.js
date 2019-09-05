@@ -1,25 +1,34 @@
 const passport = require('passport');
 const Boom = require('boom');
+const { roleRights } = require('../config/roles');
 
-const verifyCallback = (req, resolve, reject) => async (err, user, info) => {
-  const unauthorizedError = Boom.unauthorized('Please authenticate');
+const verifyCallback = (req, resolve, reject, requiredRights) => async (err, user, info) => {
   if (err || info || !user) {
-    return reject(unauthorizedError);
+    return reject(Boom.unauthorized('Please authenticate'));
   }
   req.user = user;
-  // TODO: manage access rights
+
+  if (requiredRights.length) {
+    const userRights = roleRights.get(user.role) || [];
+    const hasRequiredRights = requiredRights.every(requiredRight =>
+      userRights.includes(requiredRight)
+    );
+    if (!hasRequiredRights && req.params.userId !== user.id) {
+      return reject(Boom.forbidden('Forbidden'));
+    }
+  }
 
   resolve();
 };
 
-const auth = () => async (req, res, next) => {
+const auth = (...requiredRights) => async (req, res, next) => {
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line
     // prettier-ignore
     passport.authenticate(
       'jwt',
       { session: false },
-      verifyCallback(req, resolve, reject)
+      verifyCallback(req, resolve, reject, requiredRights)
     )(req, res, next);
   })
     .then(() => next())
