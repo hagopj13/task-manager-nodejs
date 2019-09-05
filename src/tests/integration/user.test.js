@@ -26,6 +26,14 @@ describe('User Route', () => {
     accessToken = userOneAccessToken;
   });
 
+  const checkMissingAccessToken = exec => {
+    return it('should return an error if access token is missing', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+  };
+
   const checkAccessRightOnAnotherUser = exec => {
     return it('should return a forbidden error if user is not an admin but is trying to access another user', async () => {
       userId = userTwo._id.toHexString();
@@ -65,15 +73,11 @@ describe('User Route', () => {
       checkUserFormat(response.body, userOne);
     });
 
-    it('should return error if access token is not valid', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    checkAccessRightOnAnotherUser(exec);
+    checkMissingAccessToken(exec);
 
     checkUserNotFound(exec);
+
+    checkAccessRightOnAnotherUser(exec);
   });
 
   describe('PATCH /v1/users/:userId', () => {
@@ -110,15 +114,11 @@ describe('User Route', () => {
       expect(dbUser.password).not.to.be.equal(password);
     });
 
-    it('should return error if access token is not valid', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    checkAccessRightOnAnotherUser(exec);
+    checkMissingAccessToken(exec);
 
     checkUserNotFound(exec);
+
+    checkAccessRightOnAnotherUser(exec);
 
     it('should return error if no update fields are specified', async () => {
       updateBody = {};
@@ -186,14 +186,10 @@ describe('User Route', () => {
       expect(dbTasks.length).to.be.equal(0);
     });
 
-    it('should return error if no access token is provided', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    checkAccessRightOnAnotherUser(exec);
+    checkMissingAccessToken(exec);
 
     checkUserNotFound(exec);
+
+    checkAccessRightOnAnotherUser(exec);
   });
 });

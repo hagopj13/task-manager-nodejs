@@ -17,6 +17,14 @@ describe('Task Route', () => {
     accessToken = userOneAccessToken;
   });
 
+  const checkMissingAccessToken = exec => {
+    return it('should return an error if access token is missing', async () => {
+      accessToken = null;
+      const response = await exec();
+      checkUnauthorizedError(response);
+    });
+  };
+
   const checkTaskFormat = (responseTask, expectedTask) => {
     expect(responseTask).to.have.property('id', expectedTask._id.toHexString());
     expect(responseTask).to.have.property('description', expectedTask.description);
@@ -63,11 +71,7 @@ describe('Task Route', () => {
       expect(dbTask.completed).to.be.false;
     });
 
-    it('should return an error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
+    checkMissingAccessToken(exec);
 
     it('should return an error if description is missing', async () => {
       delete newTask.description;
@@ -89,6 +93,8 @@ describe('Task Route', () => {
         .query(query)
         .send();
     };
+
+    checkMissingAccessToken(exec);
 
     it('should successfully get all the tasks that belong a specific user', async () => {
       const response = await exec();
@@ -140,20 +146,16 @@ describe('Task Route', () => {
     });
   });
 
-  const checkAccessRightsOnTask = async exec => {
-    it('should return an error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-
-    it('should return an error if task is not found', async () => {
+  const checkTaskNotFound = exec => {
+    return it('should return an error if task is not found', async () => {
       taskId = mongoose.Types.ObjectId();
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
+  };
 
-    it('should return an error if task belongs to another user', async () => {
+  const checkAccessRightsOnTask = exec => {
+    return it('should return an error if task belongs to another user', async () => {
       taskId = taskFour._id.toHexString();
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
@@ -178,9 +180,11 @@ describe('Task Route', () => {
       checkTaskFormat(response.body, taskOne);
     });
 
-    describe('should check user access right on task', async () => {
-      await checkAccessRightsOnTask(exec);
-    });
+    checkMissingAccessToken(exec);
+
+    checkTaskNotFound(exec);
+
+    checkAccessRightsOnTask(exec);
   });
 
   describe('PATCH /v1/tasks/:taskId', () => {
@@ -211,9 +215,11 @@ describe('Task Route', () => {
       expect(dbTask).to.include(updateBody);
     });
 
-    describe('should check user access right on task', async () => {
-      await checkAccessRightsOnTask(exec);
-    });
+    checkMissingAccessToken(exec);
+
+    checkTaskNotFound(exec);
+
+    checkAccessRightsOnTask(exec);
 
     it('should return an error if update body is empty', async () => {
       updateBody = {};
@@ -242,8 +248,10 @@ describe('Task Route', () => {
       expect(dbTask).not.to.be.ok;
     });
 
-    describe('should check user access rights on task', async () => {
-      await checkAccessRightsOnTask(exec);
-    });
+    checkMissingAccessToken(exec);
+
+    checkTaskNotFound(exec);
+
+    checkAccessRightsOnTask(exec);
   });
 });
