@@ -7,8 +7,8 @@ const { user: controller } = require('../../controllers');
 const router = express.Router();
 
 router
-  .route('/me')
-  .get(auth(), controller.getCurrentUser)
+  .route('/:userId')
+  .get(auth(), validate(validation.getUser), controller.getUser)
   .patch(auth(), validate(validation.updateCurrentUser), controller.updateCurrentUser)
   .delete(auth(), controller.deleteCurrentUser);
 

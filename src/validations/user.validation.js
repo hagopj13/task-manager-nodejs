@@ -1,16 +1,21 @@
 const Joi = require('@hapi/joi');
 
-const updateUserBody = Joi.object().keys({
-  email: Joi.string().email(),
-  password: Joi.string().min(8).regex(/^((?!password).)*$/im),
-  name: Joi.string().max(128),
-  age: Joi.number().integer().min(0),
-}).min(1);
+const getUser = {
+  params: Joi.object().keys({
+    userId: Joi.string().required(),
+  }),
+};
 
 const updateCurrentUser = {
-  body: updateUserBody,
+  body: Joi.object().keys({
+    email: Joi.string().email(),
+    password: Joi.string().min(8).regex(/^((?!password).)*$/im),
+    name: Joi.string().max(128),
+    age: Joi.number().integer().min(0),
+  }).min(1),
 };
 
 module.exports = {
+  getUser,
   updateCurrentUser,
 };

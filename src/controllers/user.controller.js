@@ -1,9 +1,19 @@
 const httpStatus = require('http-status');
+const Boom = require('boom');
 const { User } = require('../models');
 const { catchAsync } = require('../utils/controller.utils');
 
-const getCurrentUser = catchAsync(async (req, res) => {
-  res.send(req.user.transform());
+const getUserById = async userId => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw Boom.notFound('User not found');
+  }
+  return user;
+};
+
+const getUser = catchAsync(async (req, res) => {
+  const user = await getUserById(req.params.userId);
+  res.send(user.transform());
 });
 
 const updateCurrentUser = catchAsync(async (req, res) => {
@@ -19,7 +29,7 @@ const deleteCurrentUser = catchAsync(async (req, res) => {
 });
 
 module.exports = {
-  getCurrentUser,
+  getUser,
   updateCurrentUser,
   deleteCurrentUser,
 };
