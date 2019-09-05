@@ -6,7 +6,7 @@ const register = {
     password: Joi.string().min(8).regex(/^((?!password).)*$/im).required(),
     name: Joi.string().max(128).required(),
     age: Joi.number().integer().min(0),
-    role: Joi.string().allow('user', 'admin'),
+    role: Joi.string().valid('user', 'admin'),
   }),
 };
 

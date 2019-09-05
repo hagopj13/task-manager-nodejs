@@ -15,7 +15,7 @@ const { checkValidationError, checkUnauthorizedError } = require('../../utils/te
 const { resetDatabase } = require('../fixtures');
 const { userOne, userOneRefreshToken, userOneAccessToken } = require('../fixtures/user.fixture');
 
-describe('Auth Route', () => {
+describe.only('Auth Route', () => {
   beforeEach(async () => {
     await resetDatabase();
   });
@@ -38,6 +38,7 @@ describe('Auth Route', () => {
         email: 'john@example.com',
         password: 'White1234!',
         age: 22,
+        role: 'user',
       };
     });
 
@@ -117,6 +118,19 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.body.user.age).to.be.equal(0);
     });
+
+    it('should return an error if role is not user or admin', async () => {
+      newUser.role = 'invalidRole';
+      const response = await exec();
+      checkValidationError(response);
+    });
+
+    it('should set the role by default to user if not given', async () => {
+      delete newUser.role;
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.CREATED);
+      expect(response.body.user.role).to.be.equal('user');
+    });
   });
 
   describe('POST /v1/auth/login', () => {
@@ -141,7 +155,9 @@ describe('Auth Route', () => {
       checkTokensInResponse(response);
 
       const dbUser = await User.findById(userOne._id);
-      expect(response.body.user).to.be.deep.equal(pick(dbUser, ['id', 'email', 'name', 'age']));
+      expect(response.body.user).to.be.deep.equal(
+        pick(dbUser, ['id', 'email', 'name', 'age', 'role'])
+      );
     });
 
     it('should return a 400 error if email is missing', async () => {
