@@ -13,9 +13,14 @@ const auth = require('../../middlewares/auth');
 const { generateToken } = require('../../utils/auth.util');
 const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
-const { userOne, userOneRefreshToken, userOneAccessToken } = require('../fixtures/user.fixture');
+const {
+  userOne,
+  userOneRefreshToken,
+  userOneAccessToken,
+  adminAccessToken,
+} = require('../fixtures/user.fixture');
 
-describe.only('Auth Route', () => {
+describe('Auth Route', () => {
   beforeEach(async () => {
     await resetDatabase();
   });
@@ -308,13 +313,17 @@ describe.only('Auth Route', () => {
     let res;
     let nextSpy;
     let accessToken;
+    let userId;
     let expires;
+    let requiredRights = [];
 
     beforeEach(() => {
       res = httpMocks.createResponse();
       nextSpy = sinon.spy();
       accessToken = userOneAccessToken;
+      userId = userOne._id.toHexString();
       expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
+      requiredRights = [];
     });
 
     const exec = async () => {
@@ -322,26 +331,38 @@ describe.only('Auth Route', () => {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
+        params: {
+          userId,
+        },
       });
-      const authMiddleware = auth();
+      const authMiddleware = auth(...requiredRights);
       await authMiddleware(req, res, nextSpy);
+    };
+
+    const checkSuccessfulAuth = () => {
+      expect(nextSpy.calledOnce).to.be.true;
+      expect(nextSpy.firstCall.args.length).to.be.equal(0);
+      expect(req.user).to.be.ok;
     };
 
     it('should call next with no arguments if valid access token', async () => {
       await exec();
-      expect(nextSpy.calledOnce).to.be.true;
-      expect(nextSpy.firstCall.args.length).to.be.equal(0);
-      expect(req.user).to.be.ok;
-      expect(req.user._id).to.deep.equal(userOne._id);
+      checkSuccessfulAuth();
+      expect(req.user._id.toHexString()).to.be.equal(userId);
     });
 
-    const checkInvalidAuthAttempt = () => {
+    const checkFailingAuth = () => {
       expect(nextSpy.calledOnce).to.be.true;
       expect(nextSpy.firstCall.args.length).to.be.equal(1);
       const nextArg = nextSpy.firstCall.args[0];
       expect(nextArg).to.be.ok;
       expect(nextArg.isBoom).to.be.true;
-      const { statusCode, error, message } = nextArg.output.payload;
+      return nextArg;
+    };
+
+    const checkUnauthorizedAuth = () => {
+      const err = checkFailingAuth();
+      const { statusCode, error, message } = err.output.payload;
       expect(statusCode).to.be.equal(httpStatus.UNAUTHORIZED);
       expect(error).to.be.equal(httpStatus[httpStatus.UNAUTHORIZED]);
       expect(message).to.be.equal('Please authenticate');
@@ -350,33 +371,61 @@ describe.only('Auth Route', () => {
     it('should call next with an error if access token is not found in header', async () => {
       accessToken = null;
       await exec();
-      checkInvalidAuthAttempt();
+      checkUnauthorizedAuth();
     });
 
     it('should call next with an error if access token is not a valid jwt', async () => {
       accessToken = 'randomString';
       await exec();
-      checkInvalidAuthAttempt();
+      checkUnauthorizedAuth();
     });
 
     it('should call next with an error if token is generated with an invalid secret', async () => {
       accessToken = generateToken(userOne._id, expires, 'invalidSecret');
       await exec();
-      checkInvalidAuthAttempt();
+      checkUnauthorizedAuth();
     });
 
     it('should call next with an error if token is expired', async () => {
       expires.subtract(jwtConfig.accessExpirationMinutes + 1, 'minutes');
       accessToken = generateToken(userOne._id, expires);
       await exec();
-      checkInvalidAuthAttempt();
+      checkUnauthorizedAuth();
     });
 
     it('should call next with an error if user is not found', async () => {
       const invalidUserId = mongoose.Types.ObjectId();
       accessToken = generateToken(invalidUserId, expires);
       await exec();
-      checkInvalidAuthAttempt();
+      checkUnauthorizedAuth();
+    });
+
+    const checkForbiddenAuth = () => {
+      const err = checkFailingAuth();
+      const { statusCode, error, message } = err.output.payload;
+      expect(statusCode).to.be.equal(httpStatus.FORBIDDEN);
+      expect(error).to.be.equal(httpStatus[httpStatus.FORBIDDEN]);
+      expect(message).to.be.equal('Forbidden');
+    };
+
+    it('should call next with an error if user does not have required rights and her id is not in the params', async () => {
+      requiredRights = ['unknownRight'];
+      userId = undefined;
+      await exec();
+      checkForbiddenAuth();
+    });
+
+    it('should call next with no arguments if user does not have required rights but her id is in the params', async () => {
+      requiredRights = ['unknownRight'];
+      await exec();
+      checkSuccessfulAuth();
+    });
+
+    it('should call next with no arguments if user has the required rights', async () => {
+      requiredRights = ['getUsers'];
+      accessToken = adminAccessToken;
+      await exec();
+      checkSuccessfulAuth();
     });
   });
 });
