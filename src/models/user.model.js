@@ -9,6 +9,8 @@ const Task = require('./task.model');
 const { jwt: jwtConfig } = require('../config/config');
 const { generateToken } = require('../utils/auth.util');
 
+const roles = ['user', 'admin'];
+
 const userSchema = mongoose.Schema(
   {
     name: {
@@ -43,6 +45,11 @@ const userSchema = mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+    },
+    role: {
+      type: String,
+      enum: roles,
+      default: 'user',
     },
   },
   {
@@ -96,7 +103,7 @@ userSchema.methods.toJSON = function() {
 
 userSchema.methods.transform = function() {
   const user = this;
-  return pick(user, ['id', 'email', 'name', 'age']);
+  return pick(user, ['id', 'email', 'name', 'age', 'role']);
 };
 
 userSchema.pre('save', async function(next) {

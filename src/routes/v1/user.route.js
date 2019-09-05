@@ -10,6 +10,6 @@ router
   .route('/:userId')
   .get(auth(), validate(validation.getUser), controller.getUser)
   .patch(auth(), validate(validation.updateUser), controller.updateUser)
-  .delete(auth(), controller.deleteCurrentUser);
+  .delete(auth(), validate(validation.deleteUser), controller.deleteUser);
 
 module.exports = router;

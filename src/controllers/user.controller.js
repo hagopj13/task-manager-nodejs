@@ -24,13 +24,14 @@ const updateUser = catchAsync(async (req, res) => {
   res.send(user.transform());
 });
 
-const deleteCurrentUser = catchAsync(async (req, res) => {
-  await req.user.remove();
+const deleteUser = catchAsync(async (req, res) => {
+  const user = await getUserById(req.params.userId);
+  await user.remove();
   res.status(httpStatus.NO_CONTENT).send();
 });
 
 module.exports = {
   getUser,
   updateUser,
-  deleteCurrentUser,
+  deleteUser,
 };
