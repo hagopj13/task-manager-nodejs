@@ -28,9 +28,19 @@ const userTwo = {
   password: 'Blue1234!',
 };
 
+const admin = {
+  _id: mongoose.Types.ObjectId(),
+  name: 'Admin',
+  email: 'admin@example.com',
+  password: 'Green1234!',
+  role: 'admin',
+};
+const adminAccessToken = generateToken(admin._id, accessTokenExpires);
+
 const setupUsers = async () => {
   await new User(userOne).save();
   await new User(userTwo).save();
+  await new User(admin).save();
   await new RefreshToken(userOneRefreshTokenObj).save();
 };
 
@@ -39,5 +49,7 @@ module.exports = {
   userOneAccessToken,
   userOneRefreshToken,
   userTwo,
+  admin,
+  adminAccessToken,
   setupUsers,
 };
