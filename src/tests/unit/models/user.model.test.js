@@ -14,40 +14,49 @@ describe('User model unit tests', () => {
       };
     });
 
-    const validateUser = (isValidExpected, done) => {
+    const checkValidUser = done => {
       const user = new User(newUser);
       user.validate(err => {
-        if (isValidExpected) {
-          expect(err).to.be.null;
-        } else {
-          expect(err).not.to.be.null;
-        }
+        expect(err).to.be.null;
         done();
       });
     };
 
     it('should correctly validate a valid user', done => {
-      validateUser(true, done);
+      checkValidUser(done);
     });
+
+    const checkInvalidUser = done => {
+      const user = new User(newUser);
+      user.validate(err => {
+        expect(err).not.to.be.null;
+        done();
+      });
+    };
 
     it('should throw a validation error when email is invalid', done => {
       newUser.email = 'invalidemail';
-      validateUser(false, done);
+      checkInvalidUser(done);
     });
 
     it('should throw a validation error when password contains the word password', done => {
       newUser.password = 'Red1234!password';
-      validateUser(false, done);
+      checkInvalidUser(done);
     });
 
     it('should throw a validation error when password is shorter than 8 characters', done => {
       newUser.password = 'Red1234';
-      validateUser(false, done);
+      checkInvalidUser(done);
     });
 
     it('should throw a validation error when age is less than 0', done => {
       newUser.age = -1;
-      validateUser(false, done);
+      checkInvalidUser(done);
+    });
+
+    it('should throw a validation error if role is not user or admin', done => {
+      newUser.role = 'invalidRole';
+      checkInvalidUser(done);
     });
   });
 
