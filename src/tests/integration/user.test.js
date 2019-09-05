@@ -9,40 +9,26 @@ const {
   checkForbiddenError,
 } = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
-const {
-  userOneAccessToken,
-  userOne,
-  userTwo,
-  adminAccessToken,
-} = require('../fixtures/user.fixture');
+const { userOneAccessToken, userOne, userTwo } = require('../fixtures/user.fixture');
 
 describe('User Route', () => {
   let accessToken;
   let userId;
   beforeEach(async () => {
     await resetDatabase();
+    userId = userOne._id.toHexString();
     accessToken = userOneAccessToken;
   });
 
-  const checkAccessRightsOnUser = async exec => {
-    it('should return a forbidden error if user is not an admin', async () => {
+  const checkAccessRightOnAnotherUser = exec => {
+    return it('should return a forbidden error if user is not an admin but is trying to access another user', async () => {
       userId = userTwo._id.toHexString();
       const response = await exec();
       checkForbiddenError(response);
     });
-
-    it('should allow the request if the user is an admin', async () => {
-      accessToken = adminAccessToken;
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.OK);
-    });
   };
 
-  describe.only('GET /v1/users/:userId', () => {
-    beforeEach(() => {
-      userId = userOne._id.toHexString();
-    });
-
+  describe('GET /v1/users/:userId', () => {
     const exec = async () => {
       return request(app)
         .get(`/v1/users/${userId}`)
@@ -70,12 +56,10 @@ describe('User Route', () => {
       checkUnauthorizedError(response);
     });
 
-    describe('should check user access rights', async () => {
-      await checkAccessRightsOnUser(exec);
-    });
+    checkAccessRightOnAnotherUser(exec);
   });
 
-  describe('PATCH /v1/users/me', () => {
+  describe('PATCH /v1/users/:userId', () => {
     let updateBody;
     beforeEach(() => {
       updateBody = {};
@@ -83,7 +67,7 @@ describe('User Route', () => {
 
     const exec = async () => {
       return request(app)
-        .patch('/v1/users/me')
+        .patch(`/v1/users/${userId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updateBody);
     };
@@ -115,6 +99,8 @@ describe('User Route', () => {
       const response = await exec();
       checkUnauthorizedError(response);
     });
+
+    checkAccessRightOnAnotherUser(exec);
 
     it('should return error if no update fields are specified', async () => {
       const response = await exec();
@@ -159,10 +145,10 @@ describe('User Route', () => {
     });
   });
 
-  describe('DELETE /v1/users/me', () => {
+  describe('DELETE /v1/users/:userId', () => {
     const exec = async () => {
       return request(app)
-        .delete('/v1/users/me')
+        .delete(`/v1/users/${userId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send();
     };
@@ -186,5 +172,7 @@ describe('User Route', () => {
       const response = await exec();
       checkUnauthorizedError(response);
     });
+
+    checkAccessRightOnAnotherUser(exec);
   });
 });
