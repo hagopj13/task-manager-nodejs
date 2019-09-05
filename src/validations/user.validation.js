@@ -6,7 +6,10 @@ const getUser = {
   }),
 };
 
-const updateCurrentUser = {
+const updateUser = {
+  params: Joi.object().keys({
+    userId: Joi.string().required(),
+  }),
   body: Joi.object().keys({
     email: Joi.string().email(),
     password: Joi.string().min(8).regex(/^((?!password).)*$/im),
@@ -17,5 +20,5 @@ const updateCurrentUser = {
 
 module.exports = {
   getUser,
-  updateCurrentUser,
+  updateUser,
 };

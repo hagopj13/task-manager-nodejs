@@ -9,7 +9,7 @@ const router = express.Router();
 router
   .route('/:userId')
   .get(auth(), validate(validation.getUser), controller.getUser)
-  .patch(auth(), validate(validation.updateCurrentUser), controller.updateCurrentUser)
+  .patch(auth(), validate(validation.updateUser), controller.updateUser)
   .delete(auth(), controller.deleteCurrentUser);
 
 module.exports = router;

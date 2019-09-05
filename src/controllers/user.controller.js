@@ -16,11 +16,12 @@ const getUser = catchAsync(async (req, res) => {
   res.send(user.transform());
 });
 
-const updateCurrentUser = catchAsync(async (req, res) => {
-  await User.checkDuplicateEmail(req.body.email, req.user._id);
-  Object.keys(req.body).forEach(update => (req.user[update] = req.body[update]));
-  await req.user.save();
-  res.send(req.user.transform());
+const updateUser = catchAsync(async (req, res) => {
+  const user = await getUserById(req.params.userId);
+  await User.checkDuplicateEmail(req.body.email, user._id);
+  Object.keys(req.body).forEach(update => (user[update] = req.body[update]));
+  await user.save();
+  res.send(user.transform());
 });
 
 const deleteCurrentUser = catchAsync(async (req, res) => {
@@ -30,6 +31,6 @@ const deleteCurrentUser = catchAsync(async (req, res) => {
 
 module.exports = {
   getUser,
-  updateCurrentUser,
+  updateUser,
   deleteCurrentUser,
 };
