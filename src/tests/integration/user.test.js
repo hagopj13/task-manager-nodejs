@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const request = require('supertest');
+const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const app = require('../../app');
 const { User, Task } = require('../../models');
@@ -9,7 +10,12 @@ const {
   checkForbiddenError,
 } = require('../../utils/test.util');
 const { resetDatabase } = require('../fixtures');
-const { userOneAccessToken, userOne, userTwo } = require('../fixtures/user.fixture');
+const {
+  userOneAccessToken,
+  userOne,
+  userTwo,
+  adminAccessToken,
+} = require('../fixtures/user.fixture');
 
 describe('User Route', () => {
   let accessToken;
@@ -28,7 +34,16 @@ describe('User Route', () => {
     });
   };
 
-  describe('GET /v1/users/:userId', () => {
+  const checkUserNotFound = exec => {
+    return it('should return an error if user is not found', async () => {
+      accessToken = adminAccessToken;
+      userId = mongoose.Types.ObjectId();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  };
+
+  describe('GET /v1/users/:userId', async () => {
     const exec = async () => {
       return request(app)
         .get(`/v1/users/${userId}`)
@@ -57,12 +72,19 @@ describe('User Route', () => {
     });
 
     checkAccessRightOnAnotherUser(exec);
+
+    checkUserNotFound(exec);
   });
 
   describe('PATCH /v1/users/:userId', () => {
     let updateBody;
     beforeEach(() => {
-      updateBody = {};
+      updateBody = {
+        email: 'valid@example.com',
+        password: 'Red123456!',
+        name: 'New name',
+        age: 23,
+      };
     });
 
     const exec = async () => {
@@ -73,12 +95,6 @@ describe('User Route', () => {
     };
 
     it('should update user if input is correct', async () => {
-      updateBody = {
-        email: 'valid@example.com',
-        password: 'Red123456!',
-        name: 'New name',
-        age: 23,
-      };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
 
@@ -102,43 +118,46 @@ describe('User Route', () => {
 
     checkAccessRightOnAnotherUser(exec);
 
+    checkUserNotFound(exec);
+
     it('should return error if no update fields are specified', async () => {
+      updateBody = {};
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return error if email is invalid', async () => {
-      updateBody.email = 'notValid';
+      updateBody = { email: 'notValid' };
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return error if password contains the word password', async () => {
-      updateBody.email = 'Red1234!password';
+      updateBody = { password: 'Red1234!password' };
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return error if password is shorter than 8 characters', async () => {
-      updateBody.email = 'Red123!';
+      updateBody = { password: 'Red123!' };
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return error if age is less than 0', async () => {
-      updateBody.age = -1;
+      updateBody = { age: -1 };
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return an error if email is duplicate and is not my email', async () => {
-      updateBody.email = userTwo.email;
+      updateBody = { email: userTwo.email };
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should not return an error if email is duplicate but is my email', async () => {
-      updateBody.email = userOne.email;
+      updateBody = { email: userOne.email };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.email).to.be.equal(updateBody.email);
@@ -174,5 +193,7 @@ describe('User Route', () => {
     });
 
     checkAccessRightOnAnotherUser(exec);
+
+    checkUserNotFound(exec);
   });
 });
