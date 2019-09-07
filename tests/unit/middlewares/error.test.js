@@ -4,7 +4,7 @@ const rewire = require('rewire');
 const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
 const httpStatus = require('http-status');
-const { errorConverter, errorHandler } = require('../../../middlewares/error');
+const { errorConverter, errorHandler } = require('../../../src/middlewares/error');
 
 describe('Error middleware tests', () => {
   const errorMessage500 = 'An internal server error occurred';
@@ -140,7 +140,7 @@ describe('Error middleware tests', () => {
       const errorMessage = 'error message';
       const statusCode = httpStatus.BAD_REQUEST;
       error = new Boom(errorMessage, { statusCode });
-      const errorMiddlewares = rewire('../../../middlewares/error');
+      const errorMiddlewares = rewire('../../../src/middlewares/error');
       errorMiddlewares.__with__({
         env: 'development',
       })(() => errorMiddlewares.errorHandler(error, req, res, next));

@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const request = require('supertest');
 const httpStatus = require('http-status');
-const app = require('../../app');
+const app = require('../../src/app');
 
 describe('Errors', () => {
   describe('Unknown request', () => {

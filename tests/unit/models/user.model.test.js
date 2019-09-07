@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { User } = require('../../../models');
+const { User } = require('../../../src/models');
 const { userOne } = require('../../fixtures/user.fixture');
 
 describe('User model unit tests', () => {

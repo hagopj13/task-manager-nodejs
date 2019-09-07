@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Task } = require('../../models');
+const { Task } = require('../../src/models');
 const { userOne, userTwo } = require('./user.fixture');
 
 const taskOne = {

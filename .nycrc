@@ -1,6 +1,6 @@
 {
   "exclude": [
     "src/config",
-    "src/tests"
+    "tests"
   ]
 }

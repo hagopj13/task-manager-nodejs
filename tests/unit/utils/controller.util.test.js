@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const httpMocks = require('node-mocks-http');
 const Boom = require('boom');
 const httpStatus = require('http-status');
-const { catchAsync } = require('../../../utils/controller.utils');
+const { catchAsync } = require('../../../src/utils/controller.utils');
 
 describe('Contoller middleware tests', () => {
   describe('Async controller', () => {

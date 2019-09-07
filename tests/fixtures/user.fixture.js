@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const moment = require('moment');
-const { jwt: jwtConfig } = require('../../config/config');
-const { User, RefreshToken } = require('../../models');
-const { generateToken } = require('../../utils/auth.util');
+const { jwt: jwtConfig } = require('../../src/config/config');
+const { User, RefreshToken } = require('../../src/models');
+const { generateToken } = require('../../src/utils/auth.util');
 
 const accessTokenExpires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
 const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');

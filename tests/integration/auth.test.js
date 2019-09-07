@@ -6,11 +6,11 @@ const httpMocks = require('node-mocks-http');
 const mongoose = require('mongoose');
 const moment = require('moment');
 const { pick } = require('lodash');
-const app = require('../../app');
-const { User, RefreshToken } = require('../../models');
-const { jwt: jwtConfig } = require('../../config/config');
-const auth = require('../../middlewares/auth');
-const { generateToken } = require('../../utils/auth.util');
+const app = require('../../src/app');
+const { User, RefreshToken } = require('../../src/models');
+const { jwt: jwtConfig } = require('../../src/config/config');
+const auth = require('../../src/middlewares/auth');
+const { generateToken } = require('../../src/utils/auth.util');
 const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
 const { resetDatabase } = require('../fixtures');
 const {

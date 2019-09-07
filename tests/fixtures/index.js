@@ -1,4 +1,4 @@
-const { User, RefreshToken, Task } = require('../../models');
+const { User, RefreshToken, Task } = require('../../src/models');
 const { setupUsers } = require('./user.fixture');
 const { setupTasks } = require('./task.fixture');
 
