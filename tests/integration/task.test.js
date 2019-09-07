@@ -17,8 +17,8 @@ describe('Task Route', () => {
     accessToken = userOneAccessToken;
   });
 
-  const checkMissingAccessToken = exec => {
-    return it('should return an error if access token is missing', async () => {
+  const testMissingAccessToken = exec => {
+    return it('should return a 401 error if access token is missing', async () => {
       accessToken = null;
       const response = await exec();
       checkUnauthorizedError(response);
@@ -48,6 +48,8 @@ describe('Task Route', () => {
         .send(newTask);
     };
 
+    testMissingAccessToken(exec);
+
     it('should successfully create a new task if input data are correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
@@ -71,8 +73,6 @@ describe('Task Route', () => {
       expect(dbTask.completed).to.be.false;
     });
 
-    checkMissingAccessToken(exec);
-
     it('should return an error if description is missing', async () => {
       delete newTask.description;
       const response = await exec();
@@ -94,7 +94,7 @@ describe('Task Route', () => {
         .send();
     };
 
-    checkMissingAccessToken(exec);
+    testMissingAccessToken(exec);
 
     it('should successfully get all the tasks that belong a specific user', async () => {
       const response = await exec();
@@ -174,13 +174,13 @@ describe('Task Route', () => {
         .send();
     };
 
+    testMissingAccessToken(exec);
+
     it('should successfully return the task if everything is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTaskFormat(response.body, taskOne);
     });
-
-    checkMissingAccessToken(exec);
 
     checkTaskNotFound(exec);
 
@@ -204,6 +204,8 @@ describe('Task Route', () => {
         .send(updateBody);
     };
 
+    testMissingAccessToken(exec);
+
     it('should successfully update the task if input is correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
@@ -214,8 +216,6 @@ describe('Task Route', () => {
       expect(dbTask).to.be.ok;
       expect(dbTask).to.include(updateBody);
     });
-
-    checkMissingAccessToken(exec);
 
     checkTaskNotFound(exec);
 
@@ -240,6 +240,8 @@ describe('Task Route', () => {
         .send();
     };
 
+    testMissingAccessToken(exec);
+
     it('should successfully delete the task if everything is correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
@@ -247,8 +249,6 @@ describe('Task Route', () => {
       const dbTask = await Task.findById(taskId);
       expect(dbTask).not.to.be.ok;
     });
-
-    checkMissingAccessToken(exec);
 
     checkTaskNotFound(exec);
 

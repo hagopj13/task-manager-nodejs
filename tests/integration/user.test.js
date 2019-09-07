@@ -26,8 +26,8 @@ describe('User Route', () => {
     accessToken = userOneAccessToken;
   });
 
-  const checkMissingAccessToken = exec => {
-    return it('should return an error if access token is missing', async () => {
+  const testMissingAccessToken = exec => {
+    return it('should return a 401 error if access token is missing', async () => {
       accessToken = null;
       const response = await exec();
       checkUnauthorizedError(response);
@@ -67,13 +67,13 @@ describe('User Route', () => {
       expect(responseUser).to.have.property('role', expectedUser.role || 'user');
     };
 
+    testMissingAccessToken(exec);
+
     it('should return user profile if access token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkUserFormat(response.body, userOne);
     });
-
-    checkMissingAccessToken(exec);
 
     checkUserNotFound(exec);
 
@@ -98,6 +98,8 @@ describe('User Route', () => {
         .send(updateBody);
     };
 
+    testMissingAccessToken(exec);
+
     it('should update user if input is correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
@@ -113,8 +115,6 @@ describe('User Route', () => {
       expect(dbUser).to.include(updateBody);
       expect(dbUser.password).not.to.be.equal(password);
     });
-
-    checkMissingAccessToken(exec);
 
     checkUserNotFound(exec);
 
@@ -172,6 +172,8 @@ describe('User Route', () => {
         .send();
     };
 
+    testMissingAccessToken(exec);
+
     it('should delete user if access token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
@@ -185,8 +187,6 @@ describe('User Route', () => {
       const dbTasks = await Task.find({ owner: userOne._id });
       expect(dbTasks.length).to.be.equal(0);
     });
-
-    checkMissingAccessToken(exec);
 
     checkUserNotFound(exec);
 
