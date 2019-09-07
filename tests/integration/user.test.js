@@ -46,7 +46,7 @@ describe('User Route', () => {
   };
 
   const testAccessRightOnAnotherUser = exec => {
-    return it('should return a forbidden error if user is not an admin but is trying to access another user', async () => {
+    return it('should return a 403 error if user is not an admin but is trying to access another user', async () => {
       userId = userTwo._id.toHexString();
       const response = await exec();
       checkForbiddenError(response);
@@ -54,7 +54,7 @@ describe('User Route', () => {
   };
 
   const testUserNotFound = exec => {
-    return it('should return an error if user is not found', async () => {
+    return it('should return a 404 if user is not found', async () => {
       accessToken = adminAccessToken;
       userId = mongoose.Types.ObjectId();
       const response = await exec();
@@ -77,7 +77,7 @@ describe('User Route', () => {
       expect(responseUser).to.have.property('role', expectedUser.role || 'user');
     };
 
-    it('should return user profile if access token is valid', async () => {
+    it('should successfully return 200 and user profile if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkUserFormat(response.body, userOne);
@@ -107,7 +107,7 @@ describe('User Route', () => {
         .send(reqBody);
     };
 
-    it('should update user if input is correct', async () => {
+    it('should successfully update user and return 200 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
 
@@ -154,7 +154,7 @@ describe('User Route', () => {
         .set('Authorization', `Bearer ${accessToken}`);
     };
 
-    it('should delete user if access token is valid', async () => {
+    it('should delete user and return 204 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 

@@ -37,7 +37,7 @@ describe('Task Route', () => {
   };
 
   const testTaskNotFound = exec => {
-    return it('should return an error if task is not found', async () => {
+    return it('should return a 404 if task is not found', async () => {
       taskId = mongoose.Types.ObjectId();
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
@@ -45,7 +45,7 @@ describe('Task Route', () => {
   };
 
   const testAccessRightsOnTask = exec => {
-    return it('should return an error if task belongs to another user', async () => {
+    return it('should return a 404 error if task belongs to another user', async () => {
       taskId = taskFour._id.toHexString();
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
@@ -74,7 +74,7 @@ describe('Task Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully create a new task if input data are correct', async () => {
+    it('should successfully create a new task and return 201 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.body).to.include(reqBody);
@@ -122,7 +122,7 @@ describe('Task Route', () => {
         .query(query);
     };
 
-    it('should successfully get all the tasks that belong a specific user', async () => {
+    it('should successfully return 200 and all the tasks that belong a specific user', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(userOneTasks.length);
@@ -185,7 +185,7 @@ describe('Task Route', () => {
         .set('Authorization', `Bearer ${accessToken}`);
     };
 
-    it('should successfully return the task if everything is valid', async () => {
+    it('should successfully return 200 and the task if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTaskFormat(response.body, taskOne);
@@ -214,7 +214,7 @@ describe('Task Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully update the task if input is correct', async () => {
+    it('should successfully update the task and return 200 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body).to.include(reqBody);
@@ -246,7 +246,7 @@ describe('Task Route', () => {
         .set('Authorization', `Bearer ${accessToken}`);
     };
 
-    it('should successfully delete the task if everything is correct', async () => {
+    it('should successfully delete the task and return 204 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 

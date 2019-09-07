@@ -62,7 +62,7 @@ describe('Auth Route', () => {
         .send(reqBody);
     };
 
-    it('should register new user when request data is ok', async () => {
+    it('should successfully register new user and return 201 when data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       const { password } = reqBody;
@@ -127,7 +127,7 @@ describe('Auth Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully login user when correct email and password are provided', async () => {
+    it('should successfully login and return 200 when correct email and password are provided', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensFormat(response);
@@ -183,7 +183,7 @@ describe('Auth Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully refresh access token for a valid refresh token and delete old one', async () => {
+    it('should successfully refresh access token and return 200 for a valid refresh token', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensFormat(response);
@@ -194,7 +194,10 @@ describe('Auth Route', () => {
       expect(newRefreshToken).to.be.ok;
       expect(newRefreshToken.user.toHexString()).to.be.equal(userOne._id.toHexString());
       expect(newRefreshToken.blacklisted).to.be.false;
+    });
 
+    it('should delete the old refresh token after creating a new one', async () => {
+      await exec();
       const oldRefreshToken = await RefreshToken.findOne({ token: userOneRefreshToken });
       expect(oldRefreshToken).not.to.be.ok;
     });
@@ -264,7 +267,7 @@ describe('Auth Route', () => {
         .set('Authorization', `Bearer ${accessToken}`);
     };
 
-    it('should successfully delete all refresh tokens for the user', async () => {
+    it('should successfully delete all refresh tokens for the user and return 204', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
