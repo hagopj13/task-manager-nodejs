@@ -103,8 +103,7 @@ describe('Task Route', () => {
       return request(app)
         .get('/v1/tasks')
         .set('Authorization', `Bearer ${accessToken}`)
-        .query(query)
-        .send();
+        .query(query);
     };
 
     it('should successfully get all the tasks that belong a specific user', async () => {
@@ -183,8 +182,7 @@ describe('Task Route', () => {
     const exec = async () => {
       return request(app)
         .get(`/v1/tasks/${taskId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
     };
 
     it('should successfully return the task if everything is valid', async () => {
@@ -245,8 +243,7 @@ describe('Task Route', () => {
     const exec = async () => {
       return request(app)
         .delete(`/v1/tasks/${taskId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
     };
 
     it('should successfully delete the task if everything is correct', async () => {

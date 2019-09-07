@@ -262,8 +262,7 @@ describe('Auth Route', () => {
     const exec = async () => {
       return request(app)
         .post('/v1/auth/logoutAll')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
     };
 
     it('should successfully delete all refresh tokens for the user', async () => {

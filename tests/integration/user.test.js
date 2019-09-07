@@ -66,8 +66,7 @@ describe('User Route', () => {
     const exec = async () => {
       return request(app)
         .get(`/v1/users/${userId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
     };
 
     const checkUserFormat = (responseUser, expectedUser) => {
@@ -152,8 +151,7 @@ describe('User Route', () => {
     const exec = async () => {
       return request(app)
         .delete(`/v1/users/${userId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
     };
 
     it('should delete user if access token is valid', async () => {
