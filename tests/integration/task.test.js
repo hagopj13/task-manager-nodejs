@@ -36,6 +36,22 @@ describe('Task Route', () => {
     });
   };
 
+  const testTaskNotFound = exec => {
+    return it('should return an error if task is not found', async () => {
+      taskId = mongoose.Types.ObjectId();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  };
+
+  const testAccessRightsOnTask = exec => {
+    return it('should return an error if task belongs to another user', async () => {
+      taskId = taskFour._id.toHexString();
+      const response = await exec();
+      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  };
+
   const checkTaskFormat = (responseTask, expectedTask) => {
     expect(responseTask).to.have.property('id', expectedTask._id.toHexString());
     expect(responseTask).to.have.property('description', expectedTask.description);
@@ -158,22 +174,6 @@ describe('Task Route', () => {
     testMissingAccessToken(exec);
   });
 
-  const checkTaskNotFound = exec => {
-    return it('should return an error if task is not found', async () => {
-      taskId = mongoose.Types.ObjectId();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-  };
-
-  const checkAccessRightsOnTask = exec => {
-    return it('should return an error if task belongs to another user', async () => {
-      taskId = taskFour._id.toHexString();
-      const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
-    });
-  };
-
   describe('GET /v1/tasks/:taskId', () => {
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
@@ -193,9 +193,9 @@ describe('Task Route', () => {
 
     testMissingAccessToken(exec);
 
-    checkTaskNotFound(exec);
+    testTaskNotFound(exec);
 
-    checkAccessRightsOnTask(exec);
+    testAccessRightsOnTask(exec);
   });
 
   describe('PATCH /v1/tasks/:taskId', () => {
@@ -227,9 +227,9 @@ describe('Task Route', () => {
 
     testMissingAccessToken(exec);
 
-    checkTaskNotFound(exec);
+    testTaskNotFound(exec);
 
-    checkAccessRightsOnTask(exec);
+    testAccessRightsOnTask(exec);
 
     const bodyValidationTestCases = [{ body: {}, message: 'no update fields are specified' }];
     testBodyValidation(exec, bodyValidationTestCases);
@@ -256,8 +256,8 @@ describe('Task Route', () => {
 
     testMissingAccessToken(exec);
 
-    checkTaskNotFound(exec);
+    testTaskNotFound(exec);
 
-    checkAccessRightsOnTask(exec);
+    testAccessRightsOnTask(exec);
   });
 });

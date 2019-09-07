@@ -45,7 +45,7 @@ describe('User Route', () => {
     });
   };
 
-  const checkAccessRightOnAnotherUser = exec => {
+  const testAccessRightOnAnotherUser = exec => {
     return it('should return a forbidden error if user is not an admin but is trying to access another user', async () => {
       userId = userTwo._id.toHexString();
       const response = await exec();
@@ -53,7 +53,7 @@ describe('User Route', () => {
     });
   };
 
-  const checkUserNotFound = exec => {
+  const testUserNotFound = exec => {
     return it('should return an error if user is not found', async () => {
       accessToken = adminAccessToken;
       userId = mongoose.Types.ObjectId();
@@ -85,9 +85,9 @@ describe('User Route', () => {
 
     testMissingAccessToken(exec);
 
-    checkUserNotFound(exec);
+    testUserNotFound(exec);
 
-    checkAccessRightOnAnotherUser(exec);
+    testAccessRightOnAnotherUser(exec);
   });
 
   describe('PATCH /v1/users/:userId', () => {
@@ -125,9 +125,9 @@ describe('User Route', () => {
 
     testMissingAccessToken(exec);
 
-    checkUserNotFound(exec);
+    testUserNotFound(exec);
 
-    checkAccessRightOnAnotherUser(exec);
+    testAccessRightOnAnotherUser(exec);
 
     const bodyValidationTestCases = [
       { body: {}, message: 'no update fields are specified' },
@@ -170,8 +170,8 @@ describe('User Route', () => {
 
     testMissingAccessToken(exec);
 
-    checkUserNotFound(exec);
+    testUserNotFound(exec);
 
-    checkAccessRightOnAnotherUser(exec);
+    testAccessRightOnAnotherUser(exec);
   });
 });
