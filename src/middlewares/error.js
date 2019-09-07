@@ -1,7 +1,5 @@
-/* eslint no-unused-vars: 0 */
 const Boom = require('boom');
 const { env } = require('../config/config');
-const logger = require('../config/logger');
 
 const errorConverter = (err, req, res, next) => {
   let error = err;
@@ -30,6 +28,10 @@ const errorHandler = (err, req, res, next) => {
     status === 500 && res.locals.originalErrorMessage ? res.locals.originalErrorMessage : message;
 
   res.status(status).send(response);
+
+  if (env === 'development') {
+    next(errorObj);
+  }
 };
 
 const notFoundError = (req, res, next) => {
