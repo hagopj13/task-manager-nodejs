@@ -36,14 +36,13 @@ describe('Auth Route', () => {
     });
   };
 
-  const checkTokensInResponse = response => {
-    const { accessToken, refreshToken } = response.body;
-    expect(accessToken).to.be.ok;
-    expect(accessToken).to.have.property('token');
-    expect(accessToken).to.have.property('expires');
-    expect(refreshToken).to.be.ok;
-    expect(refreshToken).to.have.property('token');
-    expect(refreshToken).to.have.property('expires');
+  const checkTokensFormat = response => {
+    expect(response.body).to.have.property('accessToken');
+    expect(response.body).to.have.nested.property('accessToken.token');
+    expect(response.body).to.have.nested.property('accessToken.expires');
+    expect(response.body).to.have.property('refreshToken');
+    expect(response.body).to.have.nested.property('refreshToken.token');
+    expect(response.body).to.have.nested.property('refreshToken.expires');
   };
 
   describe('POST /v1/auth/register', () => {
@@ -71,7 +70,7 @@ describe('Auth Route', () => {
       expect(response.body.user).to.include(reqBody);
       expect(response.body.user).not.to.have.property('password');
       expect(response.body.user).to.have.property('id');
-      checkTokensInResponse(response);
+      checkTokensFormat(response);
 
       const dbUser = await User.findById(response.body.user.id);
       expect(dbUser).to.be.ok;
@@ -131,7 +130,7 @@ describe('Auth Route', () => {
     it('should successfully login user when correct email and password are provided', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTokensInResponse(response);
+      checkTokensFormat(response);
 
       const dbUser = await User.findById(userOne._id);
       expect(response.body.user).to.be.deep.equal(
@@ -187,7 +186,7 @@ describe('Auth Route', () => {
     it('should successfully refresh access token for a valid refresh token and delete old one', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTokensInResponse(response);
+      checkTokensFormat(response);
 
       const newRefreshToken = await RefreshToken.findOne({
         token: response.body.refreshToken.token,
