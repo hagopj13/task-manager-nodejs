@@ -20,6 +20,7 @@ const {
 describe('User Route', () => {
   let accessToken;
   let userId;
+  let reqBody;
   beforeEach(async () => {
     await resetDatabase();
     userId = userOne._id.toHexString();
@@ -31,6 +32,16 @@ describe('User Route', () => {
       accessToken = null;
       const response = await exec();
       checkUnauthorizedError(response);
+    });
+  };
+
+  const testBodyValidation = (exec, testCases) => {
+    return testCases.forEach(testCase => {
+      it(`should return a 400 error if ${testCase.message}`, async () => {
+        reqBody = testCase.body;
+        const response = await exec();
+        checkValidationError(response);
+      });
     });
   };
 
@@ -67,13 +78,13 @@ describe('User Route', () => {
       expect(responseUser).to.have.property('role', expectedUser.role || 'user');
     };
 
-    testMissingAccessToken(exec);
-
     it('should return user profile if access token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkUserFormat(response.body, userOne);
     });
+
+    testMissingAccessToken(exec);
 
     checkUserNotFound(exec);
 
@@ -81,9 +92,8 @@ describe('User Route', () => {
   });
 
   describe('PATCH /v1/users/:userId', () => {
-    let updateBody;
     beforeEach(() => {
-      updateBody = {
+      reqBody = {
         email: 'valid@example.com',
         password: 'Red123456!',
         name: 'New name',
@@ -95,72 +105,46 @@ describe('User Route', () => {
       return request(app)
         .patch(`/v1/users/${userId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(updateBody);
+        .send(reqBody);
     };
-
-    testMissingAccessToken(exec);
 
     it('should update user if input is correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
 
-      const { password } = updateBody;
-      delete updateBody.password;
-      expect(response.body).to.include(updateBody);
+      const { password } = reqBody;
+      delete reqBody.password;
+      expect(response.body).to.include(reqBody);
       expect(response.body).not.to.have.property('password');
       expect(response.body).to.have.property('id');
 
       const dbUser = await User.findById(userOne._id);
       expect(dbUser).to.be.ok;
-      expect(dbUser).to.include(updateBody);
+      expect(dbUser).to.include(reqBody);
       expect(dbUser.password).not.to.be.equal(password);
     });
+
+    testMissingAccessToken(exec);
 
     checkUserNotFound(exec);
 
     checkAccessRightOnAnotherUser(exec);
 
-    it('should return error if no update fields are specified', async () => {
-      updateBody = {};
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return error if email is invalid', async () => {
-      updateBody = { email: 'notValid' };
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return error if password contains the word password', async () => {
-      updateBody = { password: 'Red1234!password' };
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return error if password is shorter than 8 characters', async () => {
-      updateBody = { password: 'Red123!' };
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return error if age is less than 0', async () => {
-      updateBody = { age: -1 };
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if email is duplicate and is not my email', async () => {
-      updateBody = { email: userTwo.email };
-      const response = await exec();
-      checkValidationError(response);
-    });
+    const bodyValidationTestCases = [
+      { body: {}, message: 'no update fields are specified' },
+      { body: { email: 'notValid' }, message: 'email is invalid' },
+      { body: { password: 'myPassword' }, message: 'password contains the word password' },
+      { body: { password: 'Red123!' }, message: 'password is shorter than 8 characters' },
+      { body: { age: -1 }, message: 'age is less than 0' },
+      { body: { email: userTwo.email }, message: 'email is duplicate and is not my email' },
+    ];
+    testBodyValidation(exec, bodyValidationTestCases);
 
     it('should not return an error if email is duplicate but is my email', async () => {
-      updateBody = { email: userOne.email };
+      reqBody = { email: userOne.email };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body.email).to.be.equal(updateBody.email);
+      expect(response.body.email).to.be.equal(reqBody.email);
     });
   });
 
@@ -171,8 +155,6 @@ describe('User Route', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send();
     };
-
-    testMissingAccessToken(exec);
 
     it('should delete user if access token is valid', async () => {
       const response = await exec();
@@ -187,6 +169,8 @@ describe('User Route', () => {
       const dbTasks = await Task.find({ owner: userOne._id });
       expect(dbTasks.length).to.be.equal(0);
     });
+
+    testMissingAccessToken(exec);
 
     checkUserNotFound(exec);
 

@@ -12,6 +12,7 @@ const { taskOne, taskFour, userOneTasks } = require('../fixtures/task.fixture');
 describe('Task Route', () => {
   let accessToken;
   let taskId;
+  let reqBody;
   beforeEach(async () => {
     await resetDatabase();
     accessToken = userOneAccessToken;
@@ -25,6 +26,16 @@ describe('Task Route', () => {
     });
   };
 
+  const testBodyValidation = (exec, testCases) => {
+    return testCases.forEach(testCase => {
+      it(`should return a 400 error if ${testCase.message}`, async () => {
+        reqBody = testCase.body;
+        const response = await exec();
+        checkValidationError(response);
+      });
+    });
+  };
+
   const checkTaskFormat = (responseTask, expectedTask) => {
     expect(responseTask).to.have.property('id', expectedTask._id.toHexString());
     expect(responseTask).to.have.property('description', expectedTask.description);
@@ -33,9 +44,8 @@ describe('Task Route', () => {
   };
 
   describe('POST /v1/tasks', () => {
-    let newTask;
     beforeEach(() => {
-      newTask = {
+      reqBody = {
         description: 'New task',
         completed: true,
       };
@@ -45,26 +55,24 @@ describe('Task Route', () => {
       return request(app)
         .post('/v1/tasks')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(newTask);
+        .send(reqBody);
     };
-
-    testMissingAccessToken(exec);
 
     it('should successfully create a new task if input data are correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      expect(response.body).to.include(newTask);
+      expect(response.body).to.include(reqBody);
       expect(response.body).to.have.property('id');
       expect(response.body.owner).to.equal(userOne._id.toHexString());
 
       const dbTask = await Task.findById(response.body.id);
       expect(dbTask).to.be.ok;
-      expect(dbTask).to.include(newTask);
+      expect(dbTask).to.include(reqBody);
       expect(dbTask.owner).to.deep.equal(userOne._id);
     });
 
     it('should set completed to false if completed is missing', async () => {
-      delete newTask.completed;
+      delete reqBody.completed;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.body.completed).to.be.false;
@@ -73,8 +81,13 @@ describe('Task Route', () => {
       expect(dbTask.completed).to.be.false;
     });
 
+    testMissingAccessToken(exec);
+
+    const bodyValidationTestCases = [{ body: {}, message: 'description is missing' }];
+    testBodyValidation(exec, bodyValidationTestCases);
+
     it('should return an error if description is missing', async () => {
-      delete newTask.description;
+      delete reqBody.description;
       const response = await exec();
       checkValidationError(response);
     });
@@ -93,8 +106,6 @@ describe('Task Route', () => {
         .query(query)
         .send();
     };
-
-    testMissingAccessToken(exec);
 
     it('should successfully get all the tasks that belong a specific user', async () => {
       const response = await exec();
@@ -144,6 +155,8 @@ describe('Task Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(userOneTasks.length - query.skip);
     });
+
+    testMissingAccessToken(exec);
   });
 
   const checkTaskNotFound = exec => {
@@ -174,13 +187,13 @@ describe('Task Route', () => {
         .send();
     };
 
-    testMissingAccessToken(exec);
-
     it('should successfully return the task if everything is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTaskFormat(response.body, taskOne);
     });
+
+    testMissingAccessToken(exec);
 
     checkTaskNotFound(exec);
 
@@ -188,10 +201,9 @@ describe('Task Route', () => {
   });
 
   describe('PATCH /v1/tasks/:taskId', () => {
-    let updateBody;
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
-      updateBody = {
+      reqBody = {
         description: 'New task description',
         completed: false,
       };
@@ -201,31 +213,28 @@ describe('Task Route', () => {
       return request(app)
         .patch(`/v1/tasks/${taskId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(updateBody);
+        .send(reqBody);
     };
-
-    testMissingAccessToken(exec);
 
     it('should successfully update the task if input is correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body).to.include(updateBody);
+      expect(response.body).to.include(reqBody);
       expect(response.body).to.have.property('id');
 
       const dbTask = await Task.findById(taskOne._id);
       expect(dbTask).to.be.ok;
-      expect(dbTask).to.include(updateBody);
+      expect(dbTask).to.include(reqBody);
     });
+
+    testMissingAccessToken(exec);
 
     checkTaskNotFound(exec);
 
     checkAccessRightsOnTask(exec);
 
-    it('should return an error if update body is empty', async () => {
-      updateBody = {};
-      const response = await exec();
-      checkValidationError(response);
-    });
+    const bodyValidationTestCases = [{ body: {}, message: 'no update fields are specified' }];
+    testBodyValidation(exec, bodyValidationTestCases);
   });
 
   describe('DELETE /v1/tasks/:taskId', () => {
@@ -240,8 +249,6 @@ describe('Task Route', () => {
         .send();
     };
 
-    testMissingAccessToken(exec);
-
     it('should successfully delete the task if everything is correct', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
@@ -249,6 +256,8 @@ describe('Task Route', () => {
       const dbTask = await Task.findById(taskId);
       expect(dbTask).not.to.be.ok;
     });
+
+    testMissingAccessToken(exec);
 
     checkTaskNotFound(exec);
 

@@ -5,7 +5,7 @@ const httpStatus = require('http-status');
 const httpMocks = require('node-mocks-http');
 const mongoose = require('mongoose');
 const moment = require('moment');
-const { pick } = require('lodash');
+const { pick, omit, set } = require('lodash');
 const app = require('../../src/app');
 const { User, RefreshToken } = require('../../src/models');
 const { jwt: jwtConfig } = require('../../src/config/config');
@@ -21,9 +21,20 @@ const {
 } = require('../fixtures/user.fixture');
 
 describe('Auth Route', () => {
+  let reqBody;
   beforeEach(async () => {
     await resetDatabase();
   });
+
+  const testBodyValidation = (exec, testCases) => {
+    return testCases.forEach(testCase => {
+      it(`should return a 400 error if ${testCase.message}`, async () => {
+        reqBody = testCase.body;
+        const response = await exec();
+        checkValidationError(response);
+      });
+    });
+  };
 
   const checkTokensInResponse = response => {
     const { accessToken, refreshToken } = response.body;
@@ -36,9 +47,8 @@ describe('Auth Route', () => {
   };
 
   describe('POST /v1/auth/register', () => {
-    let newUser;
     beforeEach(() => {
-      newUser = {
+      reqBody = {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'White1234!',
@@ -50,88 +60,54 @@ describe('Auth Route', () => {
     const exec = async () => {
       return request(app)
         .post('/v1/auth/register')
-        .send(newUser);
+        .send(reqBody);
     };
 
     it('should register new user when request data is ok', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      const { password } = newUser;
-      delete newUser.password;
-      expect(response.body.user).to.include(newUser);
+      const { password } = reqBody;
+      delete reqBody.password;
+      expect(response.body.user).to.include(reqBody);
       expect(response.body.user).not.to.have.property('password');
       expect(response.body.user).to.have.property('id');
       checkTokensInResponse(response);
 
       const dbUser = await User.findById(response.body.user.id);
       expect(dbUser).to.be.ok;
-      expect(dbUser).to.include(newUser);
+      expect(dbUser).to.include(reqBody);
       expect(dbUser.password).not.to.be.equal(password);
     });
 
-    it('should return an error if email is missing', async () => {
-      delete newUser.email;
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if email is invalid', async () => {
-      newUser.email = 'notvalid';
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if email is already used', async () => {
-      newUser.email = userOne.email;
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if password is missing', async () => {
-      delete newUser.password;
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if password contains the word password', async () => {
-      newUser.password = 'Red1234!password';
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if password is shorter than 8 characters', async () => {
-      newUser.password = 'Red1234';
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if name is missing', async () => {
-      delete newUser.name;
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return an error if age is less than 0', async () => {
-      newUser.age = -1;
-      const response = await exec();
-      checkValidationError(response);
-    });
+    const bodyValidationTestCases = [
+      { body: {}, message: 'body is empty' },
+      { body: omit(reqBody, 'email'), message: 'email is missing' },
+      { body: set(reqBody, 'email', 'notValid'), message: 'email is invalid' },
+      { body: set(reqBody, 'email', userOne.email), message: 'email is duplicate' },
+      { body: omit(reqBody, 'password'), message: 'password is missing' },
+      {
+        body: set(reqBody, 'password', 'myPassword'),
+        message: 'password contains the word password',
+      },
+      {
+        body: set(reqBody, 'password', 'Red123!'),
+        message: 'password is shorter than 8 characters',
+      },
+      { body: omit(reqBody, 'name'), message: 'name is missing' },
+      { body: set(reqBody, 'age', -1), message: 'age is less than 0' },
+      { body: set(reqBody, 'role', 'invalidRole'), message: 'role is not user or admin' },
+    ];
+    testBodyValidation(exec, bodyValidationTestCases);
 
     it('should set the age by default to 0 if not given', async () => {
-      delete newUser.age;
+      delete reqBody.age;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.body.user.age).to.be.equal(0);
     });
 
-    it('should return an error if role is not user or admin', async () => {
-      newUser.role = 'invalidRole';
-      const response = await exec();
-      checkValidationError(response);
-    });
-
     it('should set the role by default to user if not given', async () => {
-      delete newUser.role;
+      delete reqBody.role;
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.body.user.role).to.be.equal('user');
@@ -139,10 +115,8 @@ describe('Auth Route', () => {
   });
 
   describe('POST /v1/auth/login', () => {
-    let loginCredentials;
-
     beforeEach(() => {
-      loginCredentials = {
+      reqBody = {
         email: userOne.email,
         password: userOne.password,
       };
@@ -151,7 +125,7 @@ describe('Auth Route', () => {
     const exec = async () => {
       return request(app)
         .post('/v1/auth/login')
-        .send(loginCredentials);
+        .send(reqBody);
     };
 
     it('should successfully login user when correct email and password are provided', async () => {
@@ -166,13 +140,13 @@ describe('Auth Route', () => {
     });
 
     it('should return a 400 error if email is missing', async () => {
-      delete loginCredentials.email;
+      delete reqBody.email;
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return a 400 error if password is missing', async () => {
-      delete loginCredentials.password;
+      delete reqBody.password;
       const response = await exec();
       checkValidationError(response);
     });
@@ -180,13 +154,13 @@ describe('Auth Route', () => {
     const loginErrorMessage = 'Incorrect email or password';
 
     it('should return a 401 error if user with such an email is not found', async () => {
-      loginCredentials.email = 'unknownEmail@example.com';
+      reqBody.email = 'unknownEmail@example.com';
       const response = await exec();
       checkUnauthorizedError(response, loginErrorMessage);
     });
 
     it('should return a 401 error if user password is wrong', async () => {
-      loginCredentials.password = 'wrongPassword';
+      reqBody.password = 'wrongPassword';
       const response = await exec();
       checkUnauthorizedError(response, loginErrorMessage);
     });
@@ -196,19 +170,18 @@ describe('Auth Route', () => {
     let userId;
     let refreshTokenExpires;
     let blacklisted;
-    let refreshToken;
 
     beforeEach(() => {
       userId = userOne._id;
       refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
       blacklisted = false;
-      refreshToken = userOneRefreshToken;
+      reqBody = { refreshToken: userOneRefreshToken };
     });
 
     const exec = async () => {
       return request(app)
         .post('/v1/auth/refreshToken')
-        .send({ refreshToken });
+        .send(reqBody);
     };
 
     it('should successfully refresh access token for a valid refresh token and delete old one', async () => {
@@ -228,28 +201,28 @@ describe('Auth Route', () => {
     });
 
     it('should return an error if refresh token is missing', async () => {
-      refreshToken = null;
+      reqBody = { refreshToken: null };
       const response = await exec();
       checkValidationError(response);
     });
 
     it('should return an error if the refresh token is signed by an invalid secret', async () => {
-      refreshToken = generateToken(userId, refreshTokenExpires, 'invalidSecret');
+      reqBody = { refreshToken: generateToken(userId, refreshTokenExpires, 'invalidSecret') };
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
     it('should return an error if the refresh token is not found', async () => {
-      refreshToken = generateToken(userId, refreshTokenExpires);
+      reqBody = { refreshToken: generateToken(userId, refreshTokenExpires) };
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
     const generateAndSaveRefreshToken = async () => {
-      refreshToken = generateToken(userId, refreshTokenExpires);
+      reqBody = { refreshToken: generateToken(userId, refreshTokenExpires) };
 
       const refreshTokenObject = {
-        token: refreshToken,
+        token: reqBody.refreshToken,
         user: userId,
         expires: refreshTokenExpires,
         blacklisted,
