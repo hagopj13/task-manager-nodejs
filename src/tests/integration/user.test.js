@@ -8,7 +8,7 @@ const {
   checkValidationError,
   checkUnauthorizedError,
   checkForbiddenError,
-} = require('../../utils/test.util');
+} = require('../utils/checkError');
 const { resetDatabase } = require('../fixtures');
 const {
   userOneAccessToken,

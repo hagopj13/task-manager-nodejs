@@ -11,7 +11,7 @@ const { User, RefreshToken } = require('../../models');
 const { jwt: jwtConfig } = require('../../config/config');
 const auth = require('../../middlewares/auth');
 const { generateToken } = require('../../utils/auth.util');
-const { checkValidationError, checkUnauthorizedError } = require('../../utils/test.util');
+const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
 const { resetDatabase } = require('../fixtures');
 const {
   userOne,
