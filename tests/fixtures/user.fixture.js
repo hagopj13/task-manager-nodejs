@@ -37,10 +37,13 @@ const admin = {
 };
 const adminAccessToken = generateToken(admin._id, accessTokenExpires);
 
+const allUsers = [userOne, userTwo, admin];
+
 const setupUsers = async () => {
-  await new User(userOne).save();
-  await new User(userTwo).save();
-  await new User(admin).save();
+  allUsers.forEach(async user => {
+    const userDoc = new User(user);
+    await userDoc.save();
+  });
   await new RefreshToken(userOneRefreshTokenObj).save();
 };
 
@@ -51,5 +54,6 @@ module.exports = {
   userTwo,
   admin,
   adminAccessToken,
+  allUsers,
   setupUsers,
 };
