@@ -14,8 +14,8 @@
     "report": "cross-env NODE_ENV=test nyc --reporter=lcovonly mocha tests --recursive --exit && cat ./coverage/lcov.info | env-cmd codacy-coverage && rm -rf ./coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --check src/**/*.js",
-    "format:fix": "prettier --write src/**/*.js"
+    "format": "prettier --check **/*.js",
+    "format:fix": "prettier --write **/*.js"
   },
   "repository": {
     "type": "git",
