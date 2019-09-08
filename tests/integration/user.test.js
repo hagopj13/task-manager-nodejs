@@ -36,9 +36,9 @@ describe('User Route', () => {
   };
 
   const testBodyValidation = (exec, testCases) => {
-    return testCases.forEach(testCase => {
-      it(`should return a 400 error if ${testCase.message}`, async () => {
-        reqBody = testCase.body;
+    return testCases.forEach(({ message, body }) => {
+      it(`should return a 400 error if ${message}`, async () => {
+        reqBody = body;
         const response = await exec();
         checkValidationError(response);
       });

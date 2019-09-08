@@ -27,22 +27,22 @@ describe('Auth Route', () => {
   });
 
   const testBodyValidation = (exec, testCases) => {
-    return testCases.forEach(testCase => {
-      it(`should return a 400 error if ${testCase.message}`, async () => {
-        reqBody = testCase.body;
+    return testCases.forEach(({ message, body }) => {
+      it(`should return a 400 error if ${message}`, async () => {
+        reqBody = body;
         const response = await exec();
         checkValidationError(response);
       });
     });
   };
 
-  const checkTokensFormat = response => {
-    expect(response.body).to.have.property('accessToken');
-    expect(response.body).to.have.nested.property('accessToken.token');
-    expect(response.body).to.have.nested.property('accessToken.expires');
-    expect(response.body).to.have.property('refreshToken');
-    expect(response.body).to.have.nested.property('refreshToken.token');
-    expect(response.body).to.have.nested.property('refreshToken.expires');
+  const checkTokensFormat = ({ body }) => {
+    expect(body).to.have.property('accessToken');
+    expect(body).to.have.nested.property('accessToken.token');
+    expect(body).to.have.nested.property('accessToken.expires');
+    expect(body).to.have.property('refreshToken');
+    expect(body).to.have.nested.property('refreshToken.token');
+    expect(body).to.have.nested.property('refreshToken.expires');
   };
 
   describe('POST /v1/auth/register', () => {
