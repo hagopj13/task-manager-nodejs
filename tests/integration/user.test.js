@@ -62,19 +62,19 @@ describe('User Route', () => {
     });
   };
 
+  const checkUserFormat = (responseUser, expectedUser) => {
+    expect(responseUser).to.have.property('id', expectedUser._id.toHexString());
+    expect(responseUser).to.have.property('email', expectedUser.email);
+    expect(responseUser).to.have.property('name', expectedUser.name);
+    expect(responseUser).to.have.property('age', expectedUser.age || 0);
+    expect(responseUser).to.have.property('role', expectedUser.role || 'user');
+  };
+
   describe('GET /v1/users/:userId', async () => {
     const exec = async () => {
       return request(app)
         .get(`/v1/users/${userId}`)
         .set('Authorization', `Bearer ${accessToken}`);
-    };
-
-    const checkUserFormat = (responseUser, expectedUser) => {
-      expect(responseUser).to.have.property('id', expectedUser._id.toHexString());
-      expect(responseUser).to.have.property('email', expectedUser.email);
-      expect(responseUser).to.have.property('name', expectedUser.name);
-      expect(responseUser).to.have.property('age', expectedUser.age || 0);
-      expect(responseUser).to.have.property('role', expectedUser.role || 'user');
     };
 
     it('should successfully return 200 and user profile if data is valid', async () => {
@@ -139,7 +139,7 @@ describe('User Route', () => {
     ];
     testBodyValidation(exec, bodyValidationTestCases);
 
-    it('should not return an error if email is duplicate but is my email', async () => {
+    it('should not return a 401 error if email is duplicate but is my email', async () => {
       reqBody = { email: userOne.email };
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
@@ -154,7 +154,7 @@ describe('User Route', () => {
         .set('Authorization', `Bearer ${accessToken}`);
     };
 
-    it('should delete user and return 204 if data is valid', async () => {
+    it('should successfully delete user and return 204 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 

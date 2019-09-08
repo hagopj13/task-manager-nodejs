@@ -1,29 +1,35 @@
 const { expect } = require('chai');
 const httpStatus = require('http-status');
 
-const checkValidationError = response => {
-  expect(response.status).to.be.equal(httpStatus.BAD_REQUEST);
-  expect(response.body).to.have.property('status', httpStatus.BAD_REQUEST);
-  expect(response.body).to.have.property('error', httpStatus[httpStatus.BAD_REQUEST]);
+const checkError = (response, status, message) => {
+  expect(response.status).to.be.equal(status);
+  expect(response.body).to.have.property('status', status);
+  expect(response.body).to.have.property('error', httpStatus[status]);
   expect(response.body).to.have.property('message');
+  if (message) {
+    expect(response.body.message).to.be.equal(message);
+  }
+};
+
+const checkValidationError = response => {
+  checkError(response, httpStatus.BAD_REQUEST);
 };
 
 const checkUnauthorizedError = (response, message = 'Please authenticate') => {
-  expect(response.status).to.be.equal(httpStatus.UNAUTHORIZED);
-  expect(response.body).to.have.property('status', httpStatus.UNAUTHORIZED);
-  expect(response.body).to.have.property('error', httpStatus[httpStatus.UNAUTHORIZED]);
-  expect(response.body).to.have.property('message', message);
+  checkError(response, httpStatus.UNAUTHORIZED, message);
 };
 
 const checkForbiddenError = response => {
-  expect(response.status).to.be.equal(httpStatus.FORBIDDEN);
-  expect(response.body).to.have.property('status', httpStatus.FORBIDDEN);
-  expect(response.body).to.have.property('error', httpStatus[httpStatus.FORBIDDEN]);
-  expect(response.body).to.have.property('message', 'Forbidden');
+  checkError(response, httpStatus.FORBIDDEN, 'Forbidden');
+};
+
+const checkNotFoundError = response => {
+  checkError(response, httpStatus.NOT_FOUND);
 };
 
 module.exports = {
   checkValidationError,
   checkUnauthorizedError,
   checkForbiddenError,
+  checkNotFoundError,
 };

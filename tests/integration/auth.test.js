@@ -62,7 +62,7 @@ describe('Auth Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully register new user and return 201 when data is valid', async () => {
+    it('should successfully register new user and return 201 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       const { password } = reqBody;
@@ -127,7 +127,7 @@ describe('Auth Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully login and return 200 when correct email and password are provided', async () => {
+    it('should successfully login and return 200 if correct email and password are provided', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensFormat(response);
@@ -138,17 +138,11 @@ describe('Auth Route', () => {
       );
     });
 
-    it('should return a 400 error if email is missing', async () => {
-      delete reqBody.email;
-      const response = await exec();
-      checkValidationError(response);
-    });
-
-    it('should return a 400 error if password is missing', async () => {
-      delete reqBody.password;
-      const response = await exec();
-      checkValidationError(response);
-    });
+    const bodyValidationTestCases = [
+      { body: omit(reqBody, 'email'), message: 'email is missing' },
+      { body: omit(reqBody, 'password'), message: 'password is missing' },
+    ];
+    testBodyValidation(exec, bodyValidationTestCases);
 
     const loginErrorMessage = 'Incorrect email or password';
 
@@ -183,7 +177,7 @@ describe('Auth Route', () => {
         .send(reqBody);
     };
 
-    it('should successfully refresh access token and return 200 for a valid refresh token', async () => {
+    it('should successfully refresh access token and return 200 if refresh token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       checkTokensFormat(response);
@@ -202,19 +196,18 @@ describe('Auth Route', () => {
       expect(oldRefreshToken).not.to.be.ok;
     });
 
-    it('should return an error if refresh token is missing', async () => {
-      reqBody = { refreshToken: null };
-      const response = await exec();
-      checkValidationError(response);
-    });
+    const bodyValidationTestCases = [
+      { body: omit(reqBody, 'refreshToken'), message: 'refreshToken is missing' },
+    ];
+    testBodyValidation(exec, bodyValidationTestCases);
 
-    it('should return an error if the refresh token is signed by an invalid secret', async () => {
+    it('should return a 401 error if the refresh token is signed by an invalid secret', async () => {
       reqBody = { refreshToken: generateToken(userId, refreshTokenExpires, 'invalidSecret') };
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
-    it('should return an error if the refresh token is not found', async () => {
+    it('should return a 401 error if the refresh token is not found', async () => {
       reqBody = { refreshToken: generateToken(userId, refreshTokenExpires) };
       const response = await exec();
       checkUnauthorizedError(response);
@@ -232,21 +225,21 @@ describe('Auth Route', () => {
       await new RefreshToken(refreshTokenObject).save();
     };
 
-    it('should return an error if the refresh token is blacklisted', async () => {
+    it('should return a 401 error if the refresh token is blacklisted', async () => {
       blacklisted = true;
       await generateAndSaveRefreshToken();
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
-    it('should return an error if the refresh token is expired', async () => {
+    it('should return a 401 error if the refresh token is expired', async () => {
       refreshTokenExpires.subtract(jwtConfig.refreshExpirationDays + 1, 'days');
       await generateAndSaveRefreshToken();
       const response = await exec();
       checkUnauthorizedError(response);
     });
 
-    it('should return an error if user is not found', async () => {
+    it('should return a 401 error if user is not found', async () => {
       userId = mongoose.Types.ObjectId();
       await generateAndSaveRefreshToken();
       const response = await exec();
@@ -275,7 +268,7 @@ describe('Auth Route', () => {
       expect(dbRefreshTokenCount).to.be.equal(0);
     });
 
-    it('should return an error if no access token is provided', async () => {
+    it('should return a 401 error if no access token is provided', async () => {
       accessToken = null;
       const response = await exec();
       checkUnauthorizedError(response);

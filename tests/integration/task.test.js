@@ -4,7 +4,11 @@ const httpStatus = require('http-status');
 const mongoose = require('mongoose');
 const app = require('../../src/app');
 const { Task } = require('../../src/models');
-const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
+const {
+  checkValidationError,
+  checkUnauthorizedError,
+  checkNotFoundError,
+} = require('../utils/checkError');
 const { resetDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
 const { taskOne, taskFour, userOneTasks } = require('../fixtures/task.fixture');
@@ -37,10 +41,10 @@ describe('Task Route', () => {
   };
 
   const testTaskNotFound = exec => {
-    return it('should return a 404 if task is not found', async () => {
+    return it('should return a 404 error if task is not found', async () => {
       taskId = mongoose.Types.ObjectId();
       const response = await exec();
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+      checkNotFoundError(response);
     });
   };
 
@@ -101,12 +105,6 @@ describe('Task Route', () => {
 
     const bodyValidationTestCases = [{ body: {}, message: 'description is missing' }];
     testBodyValidation(exec, bodyValidationTestCases);
-
-    it('should return an error if description is missing', async () => {
-      delete reqBody.description;
-      const response = await exec();
-      checkValidationError(response);
-    });
   });
 
   describe('GET /v1/tasks', () => {
