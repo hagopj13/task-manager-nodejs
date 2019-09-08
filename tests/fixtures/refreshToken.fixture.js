@@ -19,9 +19,9 @@ const insertRefreshToken = async refreshToken => {
 };
 
 const insertAllRefreshTokens = async () => {
-  allRefreshTokens.forEach(async refreshToken => {
+  for (const refreshToken of allRefreshTokens) {
     await insertRefreshToken(refreshToken);
-  });
+  }
 };
 
 module.exports = {

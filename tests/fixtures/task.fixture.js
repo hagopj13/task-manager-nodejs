@@ -38,9 +38,9 @@ const insertTask = async task => {
 };
 
 const insertAllTasks = async () => {
-  allTasks.forEach(async task => {
+  for (const task of allTasks) {
     await insertTask(task);
-  });
+  }
 };
 
 module.exports = {
