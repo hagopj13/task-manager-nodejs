@@ -38,9 +38,9 @@ const insertUser = async user => {
 };
 
 const insertAllUsers = async () => {
-  allUsers.forEach(async user => {
+  for (const user of allUsers) {
     await insertUser(user);
-  });
+  }
 };
 
 module.exports = {

@@ -1,13 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const Boom = require('boom');
-const moment = require('moment');
 const { pick, omit } = require('lodash');
-const RefreshToken = require('./refreshToken.model');
-const Task = require('./task.model');
-const { jwt: jwtConfig } = require('../config/config');
-const { generateToken } = require('../utils/auth.util');
 const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
@@ -56,45 +50,6 @@ const userSchema = mongoose.Schema(
   }
 );
 
-userSchema.virtual('tasks', {
-  ref: 'Task',
-  localField: '_id',
-  foreignField: 'owner',
-});
-
-userSchema.statics.checkDuplicateEmail = async function(email, currentUserId) {
-  const user = await User.findOne({ email, _id: { $ne: currentUserId } });
-  if (user) {
-    throw Boom.badRequest('Email is already used');
-  }
-};
-
-userSchema.statics.findByCredentials = async function(email, password) {
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw Boom.unauthorized('Incorrect email or password');
-  }
-  const isPasswordMatch = await bcrypt.compare(password, user.password);
-  if (!isPasswordMatch) {
-    throw Boom.unauthorized('Incorrect email or password');
-  }
-  return user;
-};
-
-userSchema.methods.generateAuthTokens = async function() {
-  const user = this;
-  const expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
-  const token = generateToken(user._id, expires);
-
-  const accessToken = { token, expires: expires.toDate() };
-  const refreshToken = await RefreshToken.generate(user);
-
-  return {
-    accessToken,
-    refreshToken: refreshToken.transform(),
-  };
-};
-
 userSchema.methods.toJSON = function() {
   const user = this;
   return omit(user.toObject(), ['password']);
@@ -110,12 +65,6 @@ userSchema.pre('save', async function(next) {
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);
   }
-  next();
-});
-
-userSchema.pre('remove', async function(next) {
-  const user = this;
-  await Task.deleteMany({ owner: user._id });
   next();
 });
 

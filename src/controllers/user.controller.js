@@ -1,32 +1,19 @@
 const httpStatus = require('http-status');
-const Boom = require('boom');
-const { User } = require('../models');
+const { userService } = require('../services');
 const { catchAsync } = require('../utils/controller.utils');
 
-const getUserById = async userId => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw Boom.notFound('User not found');
-  }
-  return user;
-};
-
 const getUser = catchAsync(async (req, res) => {
-  const user = await getUserById(req.params.userId);
+  const user = await userService.getUser(req.params.userId);
   res.send(user.transform());
 });
 
 const updateUser = catchAsync(async (req, res) => {
-  const user = await getUserById(req.params.userId);
-  await User.checkDuplicateEmail(req.body.email, user._id);
-  Object.keys(req.body).forEach(update => (user[update] = req.body[update]));
-  await user.save();
+  const user = await userService.updateUser(req.params.userId, req.body);
   res.send(user.transform());
 });
 
 const deleteUser = catchAsync(async (req, res) => {
-  const user = await getUserById(req.params.userId);
-  await user.remove();
+  await userService.deleteUser(req.params.userId);
   res.status(httpStatus.NO_CONTENT).send();
 });
 

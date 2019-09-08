@@ -119,12 +119,10 @@ describe('Task Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body).to.be.an('array');
       expect(response.body).to.have.lengthOf(userOneTasks.length);
-      await Promise.all(
-        response.body.map(async (responseTask, index) => {
-          const dbTask = await Task.findById(userOneTasks[index]);
-          checkResponseTask(responseTask, dbTask);
-        })
-      );
+      for (const [index, responseTask] of response.body.entries()) {
+        const dbTask = await Task.findById(userOneTasks[index]);
+        checkResponseTask(responseTask, dbTask);
+      }
     });
 
     it('should return only completed tasks if completed query param is set to true', async () => {
