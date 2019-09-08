@@ -33,10 +33,13 @@ const taskFour = {
 const userOneTasks = [taskOne, taskTwo, taskThree];
 const allTasks = [taskOne, taskTwo, taskThree, taskFour];
 
-const setupTasks = async () => {
+const insertTask = async task => {
+  await new Task(task).save();
+};
+
+const insertAllTasks = async () => {
   allTasks.forEach(async task => {
-    const taskDoc = new Task(task);
-    await taskDoc.save();
+    await insertTask(task);
   });
 };
 
@@ -47,5 +50,6 @@ module.exports = {
   taskFour,
   userOneTasks,
   allTasks,
-  setupTasks,
+  insertTask,
+  insertAllTasks,
 };

@@ -9,20 +9,24 @@ const {
   checkUnauthorizedError,
   checkForbiddenError,
 } = require('../utils/checkError');
-const { resetDatabase } = require('../fixtures');
+const { checkUserFormat } = require('../utils/checkResponseFormat');
+const { clearDatabase } = require('../fixtures');
 const {
-  userOneAccessToken,
   userOne,
+  userOneAccessToken,
   userTwo,
   adminAccessToken,
+  insertAllUsers,
 } = require('../fixtures/user.fixture');
+const { userOneTasks, insertTask } = require('../fixtures/task.fixture');
 
 describe('User Route', () => {
   let accessToken;
   let userId;
   let reqBody;
   beforeEach(async () => {
-    await resetDatabase();
+    await clearDatabase();
+    await insertAllUsers();
     userId = userOne._id.toHexString();
     accessToken = userOneAccessToken;
   });
@@ -45,14 +49,6 @@ describe('User Route', () => {
     });
   };
 
-  const testAccessRightOnAnotherUser = exec => {
-    return it('should return a 403 error if user is not an admin but is trying to access another user', async () => {
-      userId = userTwo._id.toHexString();
-      const response = await exec();
-      checkForbiddenError(response);
-    });
-  };
-
   const testUserNotFound = exec => {
     return it('should return a 404 if user is not found', async () => {
       accessToken = adminAccessToken;
@@ -62,12 +58,12 @@ describe('User Route', () => {
     });
   };
 
-  const checkUserFormat = (responseUser, expectedUser) => {
-    expect(responseUser).to.have.property('id', expectedUser._id.toHexString());
-    expect(responseUser).to.have.property('email', expectedUser.email);
-    expect(responseUser).to.have.property('name', expectedUser.name);
-    expect(responseUser).to.have.property('age', expectedUser.age || 0);
-    expect(responseUser).to.have.property('role', expectedUser.role || 'user');
+  const testAccessRightOnAnotherUser = exec => {
+    return it('should return a 403 error if user is not an admin but is trying to access another user', async () => {
+      userId = userTwo._id.toHexString();
+      const response = await exec();
+      checkForbiddenError(response);
+    });
   };
 
   describe('GET /v1/users/:userId', async () => {
@@ -110,17 +106,17 @@ describe('User Route', () => {
     it('should successfully update user and return 200 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
+      checkUserFormat(response.body, reqBody);
 
-      const { password } = reqBody;
+      const dbUser = await User.findById(userId);
       delete reqBody.password;
-      expect(response.body).to.include(reqBody);
-      expect(response.body).not.to.have.property('password');
-      expect(response.body).to.have.property('id');
-
-      const dbUser = await User.findById(userOne._id);
-      expect(dbUser).to.be.ok;
       expect(dbUser).to.include(reqBody);
-      expect(dbUser.password).not.to.be.equal(password);
+    });
+
+    it('should encrypt the password before storing', async () => {
+      const response = await exec();
+      const dbUser = await User.findById(response.body.id);
+      expect(dbUser.password).not.to.be.equal(reqBody.password);
     });
 
     testMissingAccessToken(exec);
@@ -135,9 +131,14 @@ describe('User Route', () => {
       { body: { password: 'myPassword' }, message: 'password contains the word password' },
       { body: { password: 'Red123!' }, message: 'password is shorter than 8 characters' },
       { body: { age: -1 }, message: 'age is less than 0' },
-      { body: { email: userTwo.email }, message: 'email is duplicate and is not my email' },
     ];
     testBodyValidation(exec, bodyValidationTestCases);
+
+    it('should return a 401 error if email is duplicate and is not my email', async () => {
+      reqBody.email = userTwo.email;
+      const response = await exec();
+      checkValidationError(response);
+    });
 
     it('should not return a 401 error if email is duplicate but is my email', async () => {
       reqBody = { email: userOne.email };
@@ -163,6 +164,9 @@ describe('User Route', () => {
     });
 
     it('should remove the tasks of the deleted user', async () => {
+      userOneTasks.forEach(async task => {
+        await insertTask(task);
+      });
       await exec();
       const dbTasks = await Task.find({ owner: userOne._id });
       expect(dbTasks.length).to.be.equal(0);

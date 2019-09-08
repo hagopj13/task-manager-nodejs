@@ -9,16 +9,19 @@ const {
   checkUnauthorizedError,
   checkNotFoundError,
 } = require('../utils/checkError');
-const { resetDatabase } = require('../fixtures');
-const { userOneAccessToken, userOne } = require('../fixtures/user.fixture');
-const { taskOne, taskFour, userOneTasks } = require('../fixtures/task.fixture');
+const { checkTaskFormat } = require('../utils/checkResponseFormat');
+const { clearDatabase } = require('../fixtures');
+const { userOneAccessToken, userOne, insertUser } = require('../fixtures/user.fixture');
+const { taskOne, taskFour, userOneTasks, insertAllTasks } = require('../fixtures/task.fixture');
 
 describe('Task Route', () => {
   let accessToken;
   let taskId;
   let reqBody;
   beforeEach(async () => {
-    await resetDatabase();
+    await clearDatabase();
+    await insertUser(userOne);
+    await insertAllTasks();
     accessToken = userOneAccessToken;
   });
 
@@ -56,13 +59,6 @@ describe('Task Route', () => {
     });
   };
 
-  const checkTaskFormat = (responseTask, expectedTask) => {
-    expect(responseTask).to.have.property('id', expectedTask._id.toHexString());
-    expect(responseTask).to.have.property('description', expectedTask.description);
-    expect(responseTask).to.have.property('completed', expectedTask.completed || false);
-    expect(responseTask).to.have.property('owner', expectedTask.owner.toHexString());
-  };
-
   describe('POST /v1/tasks', () => {
     beforeEach(() => {
       reqBody = {
@@ -81,12 +77,9 @@ describe('Task Route', () => {
     it('should successfully create a new task and return 201 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      expect(response.body).to.include(reqBody);
-      expect(response.body).to.have.property('id');
-      expect(response.body.owner).to.equal(userOne._id.toHexString());
+      checkTaskFormat(response.body, reqBody);
 
       const dbTask = await Task.findById(response.body.id);
-      expect(dbTask).to.be.ok;
       expect(dbTask).to.include(reqBody);
       expect(dbTask.owner).to.deep.equal(userOne._id);
     });
@@ -120,7 +113,7 @@ describe('Task Route', () => {
         .query(query);
     };
 
-    it('should successfully return 200 and all the tasks that belong a specific user', async () => {
+    it('should successfully return all the tasks that belong a specific user', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(userOneTasks.length);
