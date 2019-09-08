@@ -10,7 +10,7 @@ const register = catchAsync(async (req, res) => {
   const tokens = await user.generateAuthTokens();
   const response = {
     user: user.transform(),
-    ...tokens,
+    tokens: { ...tokens },
   };
   res.status(httpStatus.CREATED).send(response);
 });
@@ -20,7 +20,7 @@ const login = catchAsync(async (req, res) => {
   const tokens = await user.generateAuthTokens();
   const response = {
     user: user.transform(),
-    ...tokens,
+    tokens: { ...tokens },
   };
   res.send(response);
 });

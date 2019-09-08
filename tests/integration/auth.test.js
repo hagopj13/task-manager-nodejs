@@ -61,7 +61,7 @@ describe('Auth Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
       checkUserFormat(response.body.user, reqBody);
-      checkTokensFormat(response);
+      checkTokensFormat(response.body.tokens);
 
       const dbUser = await User.findById(response.body.user.id);
       delete reqBody.password;
@@ -128,7 +128,7 @@ describe('Auth Route', () => {
     it('should successfully login and return 200 if correct email and password are provided', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTokensFormat(response);
+      checkTokensFormat(response.body.tokens);
 
       const dbUser = await User.findById(userOne._id);
       checkUserFormat(response.body.user, dbUser);
@@ -176,7 +176,7 @@ describe('Auth Route', () => {
     it('should successfully refresh access token and return 200 if refresh token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTokensFormat(response);
+      checkTokensFormat(response.body);
 
       const dbRefreshToken = await RefreshToken.findOne({
         token: response.body.refreshToken.token,

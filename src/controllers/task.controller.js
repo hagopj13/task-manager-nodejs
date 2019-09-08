@@ -22,7 +22,7 @@ const getTasks = catchAsync(async (req, res) => {
       options: {
         limit: parseInt(req.query.limit, 10),
         skip: parseInt(req.query.skip, 10),
-        sort: req.query.sort || {},
+        sort: req.query.sort || '+_id',
       },
     })
     .execPopulate();

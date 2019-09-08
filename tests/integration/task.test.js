@@ -117,7 +117,9 @@ describe('Task Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body.length).to.be.equal(userOneTasks.length);
-      checkTaskFormat(response.body[0], userOneTasks[0]);
+      response.body.forEach((responseTask, index) => {
+        checkTaskFormat(responseTask, userOneTasks[index]);
+      });
     });
 
     it('should return only completed tasks if completed query param is set to true', async () => {

@@ -1,12 +1,12 @@
 const { expect } = require('chai');
 
-const checkTokensFormat = ({ body }) => {
-  expect(body).to.have.property('accessToken');
-  expect(body).to.have.nested.property('accessToken.token');
-  expect(body).to.have.nested.property('accessToken.expires');
-  expect(body).to.have.property('refreshToken');
-  expect(body).to.have.nested.property('refreshToken.token');
-  expect(body).to.have.nested.property('refreshToken.expires');
+const checkTokensFormat = responseTokens => {
+  expect(responseTokens).to.have.property('accessToken');
+  expect(responseTokens).to.have.nested.property('accessToken.token');
+  expect(responseTokens).to.have.nested.property('accessToken.expires');
+  expect(responseTokens).to.have.property('refreshToken');
+  expect(responseTokens).to.have.nested.property('refreshToken.token');
+  expect(responseTokens).to.have.nested.property('refreshToken.expires');
 };
 
 const checkUserFormat = (responseUser, expectedUser) => {
