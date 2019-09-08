@@ -1,43 +1,35 @@
 const httpStatus = require('http-status');
-const Boom = require('boom');
-const { User, RefreshToken } = require('../models');
+const { userService, tokenService } = require('../services');
 const { catchAsync } = require('../utils/controller.utils');
 
 const register = catchAsync(async (req, res) => {
-  await User.checkDuplicateEmail(req.body.email);
-  const user = new User(req.body);
-  await user.save();
-  const tokens = await user.generateAuthTokens();
+  const user = await userService.createUser(req.body);
+  const tokens = await tokenService.generateAuthTokens(user);
   const response = {
     user: user.transform(),
-    tokens: { ...tokens },
+    tokens,
   };
   res.status(httpStatus.CREATED).send(response);
 });
 
 const login = catchAsync(async (req, res) => {
-  const user = await User.findByCredentials(req.body.email, req.body.password);
-  const tokens = await user.generateAuthTokens();
+  const user = await userService.loginUser(req.body.email, req.body.password);
+  const tokens = await tokenService.generateAuthTokens(user);
   const response = {
     user: user.transform(),
-    tokens: { ...tokens },
+    tokens,
   };
   res.send(response);
 });
 
 const refreshToken = catchAsync(async (req, res) => {
-  const refreshTokenDoc = await RefreshToken.verify(req.body.refreshToken);
-  const user = await User.findById(refreshTokenDoc.user);
-  if (!user) {
-    throw Boom.unauthorized('Please authenticate');
-  }
-  const tokens = await user.generateAuthTokens();
+  const tokens = await tokenService.verifyAndGenerateAuthTokens(req.body.refreshToken);
   const response = { ...tokens };
   res.send(response);
 });
 
 const logoutAll = catchAsync(async (req, res) => {
-  await RefreshToken.deleteMany({ user: req.user._id });
+  await tokenService.deleteAllRefreshTokensOfUser(req.user);
   res.status(httpStatus.NO_CONTENT).send();
 });
 

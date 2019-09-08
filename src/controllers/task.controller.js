@@ -1,59 +1,33 @@
 const httpStatus = require('http-status');
-const Boom = require('boom');
-const { Task } = require('../models');
+const { taskService } = require('../services');
 const { catchAsync } = require('../utils/controller.utils');
 
 const createTask = catchAsync(async (req, res) => {
-  const task = new Task({ ...req.body, owner: req.user._id });
-  await task.save();
-  res.status(httpStatus.CREATED).send(task.transform());
+  const task = await taskService.createTask({ ...req.body, owner: req.user._id });
+  const response = task.transform();
+  res.status(httpStatus.CREATED).send(response);
 });
 
 const getTasks = catchAsync(async (req, res) => {
-  const match = {};
-  if (typeof req.query.completed !== 'undefined') {
-    match.completed = req.query.completed === true;
-  }
-
-  await req.user
-    .populate({
-      path: 'tasks',
-      match,
-      options: {
-        limit: parseInt(req.query.limit, 10),
-        skip: parseInt(req.query.skip, 10),
-        sort: req.query.sort || '+_id',
-      },
-    })
-    .execPopulate();
-
-  const tasks = req.user.tasks.map(task => task.transform());
-  res.send(tasks);
+  const tasks = await taskService.getTasks(req.query, req.user._id);
+  const response = tasks.map(task => task.transform());
+  res.send(response);
 });
 
-const getTaskOfUser = async (taskId, userId) => {
-  const task = await Task.findOne({ _id: taskId, owner: userId });
-  if (!task) {
-    throw Boom.notFound('Task not found');
-  }
-  return task;
-};
-
 const getTask = catchAsync(async (req, res) => {
-  const task = await getTaskOfUser(req.params.taskId, req.user._id);
-  res.send(task.transform());
+  const task = await taskService.getTask(req.params.taskId, req.user._id);
+  const response = task.transform();
+  res.send(response);
 });
 
 const updateTask = catchAsync(async (req, res) => {
-  const task = await getTaskOfUser(req.params.taskId, req.user._id);
-  Object.keys(req.body).forEach(update => (task[update] = req.body[update]));
-  await task.save();
-  res.send(task.transform());
+  const task = await taskService.updateTask(req.params.taskId, req.body, req.user._id);
+  const response = task.transform();
+  res.send(response);
 });
 
 const deleteTask = catchAsync(async (req, res) => {
-  const task = await getTaskOfUser(req.params.taskId, req.user._id);
-  await task.remove();
+  await taskService.deleteTask(req.params.taskId, req.user._id);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
