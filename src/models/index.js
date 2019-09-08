@@ -1,9 +1,3 @@
-const User = require('./user.model');
-const RefreshToken = require('./refreshToken.model');
-const Task = require('./task.model');
-
-module.exports = {
-  User,
-  RefreshToken,
-  Task,
-};
+module.exports.User = require('./user.model');
+module.exports.RefreshToken = require('./refreshToken.model');
+module.exports.Task = require('./task.model');

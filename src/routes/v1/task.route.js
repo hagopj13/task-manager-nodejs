@@ -1,20 +1,20 @@
 const express = require('express');
 const auth = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
-const { task: validation } = require('../../validations');
-const { task: controller } = require('../../controllers');
+const { taskValidation } = require('../../validations');
+const { taskController } = require('../../controllers');
 
 const router = express.Router();
 
 router
   .route('/')
-  .post(auth(), validate(validation.createTask), controller.createTask)
-  .get(auth(), validate(validation.getTasks), controller.getTasks);
+  .post(auth(), validate(taskValidation.createTask), taskController.createTask)
+  .get(auth(), validate(taskValidation.getTasks), taskController.getTasks);
 
 router
   .route('/:taskId')
-  .get(auth(), validate(validation.getTask), controller.getTask)
-  .patch(auth(), validate(validation.updateTask), controller.updateTask)
-  .delete(auth(), validate(validation.deleteTask), controller.deleteTask);
+  .get(auth(), validate(taskValidation.getTask), taskController.getTask)
+  .patch(auth(), validate(taskValidation.updateTask), taskController.updateTask)
+  .delete(auth(), validate(taskValidation.deleteTask), taskController.deleteTask);
 
 module.exports = router;

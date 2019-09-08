@@ -1,9 +1,3 @@
-const auth = require('./auth.controller');
-const user = require('./user.controller');
-const task = require('./task.controller');
-
-module.exports = {
-  auth,
-  user,
-  task,
-};
+module.exports.authController = require('./auth.controller');
+module.exports.userController = require('./user.controller');
+module.exports.taskController = require('./task.controller');

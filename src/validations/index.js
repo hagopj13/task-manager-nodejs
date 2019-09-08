@@ -1,9 +1,3 @@
-const auth = require('./auth.validation');
-const user = require('./user.validation');
-const task = require('./task.validation');
-
-module.exports = {
-  auth,
-  user,
-  task,
-}
+module.exports.authValidation = require('./auth.validation');
+module.exports.userValidation = require('./user.validation');
+module.exports.taskValidation = require('./task.validation');
