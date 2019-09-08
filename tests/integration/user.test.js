@@ -9,7 +9,7 @@ const {
   checkUnauthorizedError,
   checkForbiddenError,
 } = require('../utils/checkError');
-const { checkUserFormat } = require('../utils/checkResponseFormat');
+const { checkResponseUser } = require('../utils/checkResponse');
 const { clearDatabase } = require('../fixtures');
 const {
   userOne,
@@ -76,7 +76,8 @@ describe('User Route', () => {
     it('should successfully return 200 and user profile if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkUserFormat(response.body, userOne);
+      const dbUser = await User.findById(userOne._id);
+      checkResponseUser(response.body, dbUser);
     });
 
     testMissingAccessToken(exec);
@@ -106,11 +107,12 @@ describe('User Route', () => {
     it('should successfully update user and return 200 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkUserFormat(response.body, reqBody);
+      delete reqBody.password;
+      expect(response.body).to.include(reqBody);
 
       const dbUser = await User.findById(userId);
-      delete reqBody.password;
       expect(dbUser).to.include(reqBody);
+      checkResponseUser(response.body, dbUser);
     });
 
     it('should encrypt the password before storing', async () => {

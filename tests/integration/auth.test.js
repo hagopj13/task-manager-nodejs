@@ -12,7 +12,7 @@ const { jwt: jwtConfig } = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
 const { generateToken } = require('../../src/utils/auth.util');
 const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
-const { checkTokensFormat, checkUserFormat } = require('../utils/checkResponseFormat');
+const { checkResponseTokens, checkResponseUser } = require('../utils/checkResponse');
 const { clearDatabase } = require('../fixtures');
 const {
   userOne,
@@ -60,12 +60,15 @@ describe('Auth Route', () => {
     it('should successfully register new user and return 201 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      checkUserFormat(response.body.user, reqBody);
-      checkTokensFormat(response.body.tokens);
+      checkResponseTokens(response.body.tokens);
+
+      delete reqBody.password;
+      expect(response.body.user).to.include(reqBody);
 
       const dbUser = await User.findById(response.body.user.id);
       delete reqBody.password;
       expect(dbUser).to.include(reqBody);
+      checkResponseUser(response.body.user, dbUser);
     });
 
     it('should encrypt the password before storing', async () => {
@@ -128,10 +131,9 @@ describe('Auth Route', () => {
     it('should successfully login and return 200 if correct email and password are provided', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTokensFormat(response.body.tokens);
-
+      checkResponseTokens(response.body.tokens);
       const dbUser = await User.findById(userOne._id);
-      checkUserFormat(response.body.user, dbUser);
+      checkResponseUser(response.body.user, dbUser);
     });
 
     const bodyValidationTestCases = [
@@ -176,7 +178,7 @@ describe('Auth Route', () => {
     it('should successfully refresh access token and return 200 if refresh token is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTokensFormat(response.body);
+      checkResponseTokens(response.body);
 
       const dbRefreshToken = await RefreshToken.findOne({
         token: response.body.refreshToken.token,

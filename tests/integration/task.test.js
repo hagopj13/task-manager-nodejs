@@ -9,7 +9,7 @@ const {
   checkUnauthorizedError,
   checkNotFoundError,
 } = require('../utils/checkError');
-const { checkTaskFormat } = require('../utils/checkResponseFormat');
+const { checkResponseTask } = require('../utils/checkResponse');
 const { clearDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne, insertUser } = require('../fixtures/user.fixture');
 const { taskOne, taskFour, userOneTasks, insertAllTasks } = require('../fixtures/task.fixture');
@@ -77,11 +77,12 @@ describe('Task Route', () => {
     it('should successfully create a new task and return 201 if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      checkTaskFormat(response.body, reqBody);
+      expect(response.body).to.include(reqBody);
 
       const dbTask = await Task.findById(response.body.id);
       expect(dbTask).to.include(reqBody);
       expect(dbTask.owner).to.deep.equal(userOne._id);
+      checkResponseTask(response.body, dbTask);
     });
 
     it('should set completed to false if completed is missing', async () => {
@@ -116,10 +117,14 @@ describe('Task Route', () => {
     it('should successfully return all the tasks that belong a specific user', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body.length).to.be.equal(userOneTasks.length);
-      response.body.forEach((responseTask, index) => {
-        checkTaskFormat(responseTask, userOneTasks[index]);
-      });
+      expect(response.body).to.be.an('array');
+      expect(response.body).to.have.lengthOf(userOneTasks.length);
+      await Promise.all(
+        response.body.map(async (responseTask, index) => {
+          const dbTask = await Task.findById(userOneTasks[index]);
+          checkResponseTask(responseTask, dbTask);
+        })
+      );
     });
 
     it('should return only completed tasks if completed query param is set to true', async () => {
@@ -181,7 +186,9 @@ describe('Task Route', () => {
     it('should successfully return 200 and the task if data is valid', async () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkTaskFormat(response.body, taskOne);
+
+      const dbTask = await Task.findById(taskId);
+      checkResponseTask(response.body, dbTask);
     });
 
     testMissingAccessToken(exec);
@@ -211,11 +218,10 @@ describe('Task Route', () => {
       const response = await exec();
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.body).to.include(reqBody);
-      expect(response.body).to.have.property('id');
 
       const dbTask = await Task.findById(taskOne._id);
-      expect(dbTask).to.be.ok;
       expect(dbTask).to.include(reqBody);
+      checkResponseTask(response.body, dbTask);
     });
 
     testMissingAccessToken(exec);
