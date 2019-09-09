@@ -45,9 +45,9 @@ const verifyRefreshToken = async token => {
   }
 };
 
-const verifyAndGenerateAuthTokens = async refreshToken => {
-  const refreshTokenDoc = await verifyRefreshToken(refreshToken);
-  const user = await User.findById(refreshTokenDoc.user);
+const verifyAndGenerateAuthTokens = async token => {
+  const refreshToken = await verifyRefreshToken(token);
+  const user = await User.findById(refreshToken.user);
   if (!user) {
     throw unauthorizedError;
   }
