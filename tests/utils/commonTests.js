@@ -1,7 +1,12 @@
 const { expect } = require('chai');
 const httpStatus = require('http-status');
 const request = require('./request');
-const { checkUnauthorizedError, checkValidationError } = require('./checkError');
+const {
+  checkUnauthorizedError,
+  checkValidationError,
+  checkForbiddenError,
+} = require('./checkError');
+const { userOneAccessToken, adminAccessToken } = require('../fixtures/user.fixture');
 
 const testMissingAccessToken = getReqConfig => {
   it('should return a 401 error if access token is missing', async () => {
@@ -22,6 +27,22 @@ const testBodyValidation = (getReqConfig, testCases) => {
       const response = await request(config);
       checkValidationError(response);
     });
+  });
+};
+
+const testAdminOnlyAccess = getReqConfig => {
+  it('should allow access for admins, but deny it for users', async () => {
+    const config = getReqConfig();
+    if (!config.headers) {
+      config.headers = {};
+    }
+    config.headers.Authorization = `Bearer ${adminAccessToken}`;
+    const allowedResponse = await request(config);
+    expect(allowedResponse.status).to.be.below(300);
+
+    config.headers.Authorization = `Bearer ${userOneAccessToken}`;
+    const deniedResponse = await request(config);
+    checkForbiddenError(deniedResponse);
   });
 };
 
@@ -107,6 +128,7 @@ const testQuerySkip = (getReqConfig, skip, originalList) => {
 module.exports = {
   testMissingAccessToken,
   testBodyValidation,
+  testAdminOnlyAccess,
   testQueryFilter,
   testQuerySort,
   testQueryLimit,

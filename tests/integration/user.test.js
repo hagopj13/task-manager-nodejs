@@ -8,6 +8,7 @@ const { checkResponseUser } = require('../utils/checkResponse');
 const {
   testMissingAccessToken,
   testBodyValidation,
+  testAdminOnlyAccess,
   testQueryFilter,
   testQuerySort,
   testQueryLimit,
@@ -186,7 +187,7 @@ describe('User Route', () => {
     testAccessRightOnAnotherUser(getReqConfig);
   });
 
-  describe('GET /v1/users', async () => {
+  describe.only('GET /v1/users', async () => {
     let query;
     beforeEach(() => {
       accessToken = adminAccessToken;
@@ -214,6 +215,7 @@ describe('User Route', () => {
     });
 
     testMissingAccessToken(getReqConfig);
+    testAdminOnlyAccess(getReqConfig);
 
     testQueryFilter(getReqConfig, 'name', userOne.name, allUsers);
     testQueryFilter(getReqConfig, 'role', 'user', allUsers);
