@@ -76,9 +76,39 @@ const testQuerySort = (getReqConfig, sort, originalList) => {
   });
 };
 
+const testQueryLimit = (getReqConfig, limit, originalList) => {
+  it('should limit returned elements if limit query param is specified', async () => {
+    const config = getReqConfig();
+    if (!config.query) {
+      config.query = {};
+    }
+    config.query.limit = limit;
+    const response = await request(config);
+    expect(response.status).to.be.equal(httpStatus.OK);
+    const expectedLength = Math.min(limit, originalList.length);
+    expect(response.data).to.have.lengthOf(expectedLength);
+  });
+};
+
+const testQuerySkip = (getReqConfig, skip, originalList) => {
+  it('should skip some elements if skip query param is specified', async () => {
+    const config = getReqConfig();
+    if (!config.query) {
+      config.query = {};
+    }
+    config.query.skip = skip;
+    const response = await request(config);
+    expect(response.status).to.be.equal(httpStatus.OK);
+    const expectedLength = Math.max(0, originalList.length - skip);
+    expect(response.data).to.have.lengthOf(expectedLength);
+  });
+};
+
 module.exports = {
   testMissingAccessToken,
   testBodyValidation,
   testQueryFilter,
   testQuerySort,
+  testQueryLimit,
+  testQuerySkip,
 };

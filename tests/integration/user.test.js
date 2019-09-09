@@ -10,6 +10,8 @@ const {
   testBodyValidation,
   testQueryFilter,
   testQuerySort,
+  testQueryLimit,
+  testQuerySkip,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const {
@@ -184,7 +186,7 @@ describe('User Route', () => {
     testAccessRightOnAnotherUser(getReqConfig);
   });
 
-  describe.only('GET /v1/users', async () => {
+  describe('GET /v1/users', async () => {
     let query;
     beforeEach(() => {
       accessToken = adminAccessToken;
@@ -216,19 +218,7 @@ describe('User Route', () => {
     testQueryFilter(getReqConfig, 'name', userOne.name, allUsers);
     testQueryFilter(getReqConfig, 'role', 'user', allUsers);
     testQuerySort(getReqConfig, '-role', allUsers);
-
-    it('should limit tasks if limit query param is specified', async () => {
-      query.limit = 1;
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.data.length).to.be.equal(query.limit);
-    });
-
-    it('should skip tasks if skip query param is specified', async () => {
-      query.skip = 1;
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.data.length).to.be.equal(userOneTasks.length - query.skip);
-    });
+    testQueryLimit(getReqConfig, 1, allUsers);
+    testQuerySkip(getReqConfig, 1, allUsers);
   });
 });

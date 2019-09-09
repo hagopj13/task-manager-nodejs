@@ -10,6 +10,8 @@ const {
   testBodyValidation,
   testQueryFilter,
   testQuerySort,
+  testQueryLimit,
+  testQuerySkip,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne, insertUser } = require('../fixtures/user.fixture');
@@ -86,7 +88,7 @@ describe('Task Route', () => {
     testBodyValidation(getReqConfig, bodyValidationTestCases);
   });
 
-  describe.only('GET /v1/tasks', () => {
+  describe('GET /v1/tasks', () => {
     let query;
     beforeEach(() => {
       accessToken = userOneAccessToken;
@@ -118,20 +120,8 @@ describe('Task Route', () => {
     testQueryFilter(getReqConfig, 'completed', true, userOneTasks);
     testQueryFilter(getReqConfig, 'completed', false, userOneTasks);
     testQuerySort(getReqConfig, '-completed', userOneTasks);
-
-    it('should limit tasks if limit query param is specified', async () => {
-      query.limit = 1;
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.data.length).to.be.equal(query.limit);
-    });
-
-    it('should skip tasks if skip query param is specified', async () => {
-      query.skip = 1;
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.data.length).to.be.equal(userOneTasks.length - query.skip);
-    });
+    testQueryLimit(getReqConfig, 1, userOneTasks);
+    testQuerySkip(getReqConfig, 1, userOneTasks);
   });
 
   describe('GET /v1/tasks/:taskId', () => {
