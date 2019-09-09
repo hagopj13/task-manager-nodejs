@@ -5,7 +5,12 @@ const request = require('../utils/request');
 const { User, Task } = require('../../src/models');
 const { checkValidationError, checkForbiddenError } = require('../utils/checkError');
 const { checkResponseUser } = require('../utils/checkResponse');
-const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
+const {
+  testMissingAccessToken,
+  testBodyValidation,
+  testQueryFilter,
+  testQuerySort,
+} = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const {
   userOne,
@@ -207,5 +212,23 @@ describe('User Route', () => {
     });
 
     testMissingAccessToken(getReqConfig);
+
+    testQueryFilter(getReqConfig, 'name', userOne.name, allUsers);
+    testQueryFilter(getReqConfig, 'role', 'user', allUsers);
+    testQuerySort(getReqConfig, '-role', allUsers);
+
+    it('should limit tasks if limit query param is specified', async () => {
+      query.limit = 1;
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.data.length).to.be.equal(query.limit);
+    });
+
+    it('should skip tasks if skip query param is specified', async () => {
+      query.skip = 1;
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.data.length).to.be.equal(userOneTasks.length - query.skip);
+    });
   });
 });

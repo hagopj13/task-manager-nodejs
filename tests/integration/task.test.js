@@ -5,7 +5,12 @@ const request = require('../utils/request');
 const { Task } = require('../../src/models');
 const { checkNotFoundError } = require('../utils/checkError');
 const { checkResponseTask } = require('../utils/checkResponse');
-const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
+const {
+  testMissingAccessToken,
+  testBodyValidation,
+  testQueryFilter,
+  testQuerySort,
+} = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne, insertUser } = require('../fixtures/user.fixture');
 const { taskOne, taskFour, userOneTasks, insertAllTasks } = require('../fixtures/task.fixture');
@@ -81,7 +86,7 @@ describe('Task Route', () => {
     testBodyValidation(getReqConfig, bodyValidationTestCases);
   });
 
-  describe('GET /v1/tasks', () => {
+  describe.only('GET /v1/tasks', () => {
     let query;
     beforeEach(() => {
       accessToken = userOneAccessToken;
@@ -108,33 +113,11 @@ describe('Task Route', () => {
       }
     });
 
-    it('should return only completed tasks if completed query param is set to true', async () => {
-      query.completed = true;
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      const numCompleteTasks = userOneTasks.filter(task => task.completed).length;
-      expect(response.data.length).to.be.equal(numCompleteTasks);
-      expect(response.data[0]).to.have.property('completed', true);
-    });
+    testMissingAccessToken(getReqConfig);
 
-    it('should return only incomplete tasks if completed query param is set to false', async () => {
-      query.completed = false;
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      const numIncompleteTasks = userOneTasks.filter(task => !task.completed).length;
-      expect(response.data.length).to.be.equal(numIncompleteTasks);
-      expect(response.data[0]).to.have.property('completed', false);
-    });
-
-    it('should sort tasks if sort query param is specified', async () => {
-      query.sort = '-completed';
-      const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.OK);
-      const expectedTasksSorted = [...userOneTasks].sort((a, b) => b.completed - a.completed);
-      response.data.forEach((responseTask, index) => {
-        expect(responseTask.id).to.be.equal(expectedTasksSorted[index]._id.toHexString());
-      });
-    });
+    testQueryFilter(getReqConfig, 'completed', true, userOneTasks);
+    testQueryFilter(getReqConfig, 'completed', false, userOneTasks);
+    testQuerySort(getReqConfig, '-completed', userOneTasks);
 
     it('should limit tasks if limit query param is specified', async () => {
       query.limit = 1;
@@ -149,8 +132,6 @@ describe('Task Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       expect(response.data.length).to.be.equal(userOneTasks.length - query.skip);
     });
-
-    testMissingAccessToken(getReqConfig);
   });
 
   describe('GET /v1/tasks/:taskId', () => {

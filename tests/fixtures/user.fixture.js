@@ -11,6 +11,7 @@ const userOne = {
   name: 'User One',
   email: 'user1@example.com',
   password: 'Red1234!',
+  role: 'user',
 };
 
 const userTwo = {
@@ -18,6 +19,7 @@ const userTwo = {
   name: 'User Two',
   email: 'user2@example.com',
   password: 'Blue1234!',
+  role: 'user',
 };
 
 const admin = {

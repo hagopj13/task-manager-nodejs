@@ -1,3 +1,5 @@
+const { expect } = require('chai');
+const httpStatus = require('http-status');
 const request = require('./request');
 const { checkUnauthorizedError, checkValidationError } = require('./checkError');
 
@@ -23,7 +25,60 @@ const testBodyValidation = (getReqConfig, testCases) => {
   });
 };
 
+const testQueryFilter = (getReqConfig, key, value, originalList) => {
+  return it(`should correctly apply filter on ${key} with value ${value}`, async () => {
+    const config = getReqConfig();
+    if (!config.query) {
+      config.query = {};
+    }
+    config.query[key] = value;
+    const response = await request(config);
+    expect(response.status).to.be.equal(httpStatus.OK);
+    const matchingElems = originalList.filter(elem => elem[key] === value);
+    expect(response.data).to.have.lengthOf(matchingElems.length);
+    if (response.data.length) {
+      expect(response.data[0]).to.have.property(key, value);
+    }
+  });
+};
+
+const sortBy = (key, desc) => {
+  return (a, b) => {
+    if (a[key] === b[key]) {
+      return 0;
+    }
+    if (a[key] < b[key]) {
+      return desc ? 1 : -1;
+    }
+    return desc ? -1 : 1;
+  };
+};
+
+const testQuerySort = (getReqConfig, sort, originalList) => {
+  let desc = false;
+  let sortKey = sort;
+  if (sort[0] === '-') {
+    desc = true;
+    sortKey = sortKey.slice(1);
+  }
+  return it(`should correctly apply sorting on ${sortKey}`, async () => {
+    const config = getReqConfig();
+    if (!config.query) {
+      config.query = {};
+    }
+    config.query.sort = sort;
+    const response = await request(config);
+    expect(response.status).to.be.equal(httpStatus.OK);
+    const expectedList = [...originalList].sort(sortBy(sortKey, desc));
+    response.data.forEach((responseElem, index) => {
+      expect(responseElem.id).to.be.equal(expectedList[index]._id.toHexString());
+    });
+  });
+};
+
 module.exports = {
   testMissingAccessToken,
   testBodyValidation,
+  testQueryFilter,
+  testQuerySort,
 };
