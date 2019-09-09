@@ -1,6 +1,7 @@
 const Boom = require('boom');
 const bcrypt = require('bcryptjs');
 const { User, Task } = require('../models');
+const { getQueryFilter, getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
   const user = await User.findOne({ email, _id: { $ne: excludeUserId } });
@@ -51,10 +52,19 @@ const loginUser = async (email, password) => {
   return user;
 };
 
+const getUsers = async query => {
+  const filter = getQueryFilter(query, ['name', 'role']);
+  const options = getQueryOptions(query);
+
+  const users = await User.find(filter, null, options);
+  return users;
+};
+
 module.exports = {
   createUser,
   getUser,
   updateUser,
   deleteUser,
   loginUser,
+  getUsers,
 };

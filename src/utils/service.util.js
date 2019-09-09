@@ -1,4 +1,16 @@
-const getFilterOptions = ({ limit, skip, sort }) => {
+const getQueryFilter = (query, params) => {
+  const queryFilter = {};
+  if (Array.isArray(params)) {
+    params.forEach(param => {
+      if (typeof query[param] !== 'undefined') {
+        queryFilter[param] = query[param];
+      }
+    });
+  }
+  return queryFilter;
+};
+
+const getQueryOptions = ({ limit, skip, sort }) => {
   const options = {};
   if (limit) {
     options.limit = parseInt(limit, 10);
@@ -16,5 +28,6 @@ const getFilterOptions = ({ limit, skip, sort }) => {
 };
 
 module.exports = {
-  getFilterOptions,
+  getQueryFilter,
+  getQueryOptions,
 };

@@ -12,6 +12,7 @@ const errorConverter = (err, req, res, next) => {
   next(error);
 };
 
+// eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   let errorObj = err;
   if (!(errorObj instanceof Boom)) {
@@ -28,10 +29,6 @@ const errorHandler = (err, req, res, next) => {
     status === 500 && res.locals.originalErrorMessage ? res.locals.originalErrorMessage : message;
 
   res.status(status).send(response);
-
-  if (env === 'development') {
-    next(errorObj);
-  }
 };
 
 const notFoundError = (req, res, next) => {

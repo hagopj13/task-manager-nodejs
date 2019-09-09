@@ -24,8 +24,19 @@ const deleteUser = {
   }),
 };
 
+const getUsers = {
+  query: Joi.object().keys({
+    name: Joi.string(),
+    role: Joi.string(),
+    sort: Joi.string(),
+    limit: Joi.number().integer(),
+    skip: Joi.number().integer(),
+  }),
+}
+
 module.exports = {
   getUser,
   updateUser,
   deleteUser,
+  getUsers,
 };
