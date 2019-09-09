@@ -1,9 +1,9 @@
 const Boom = require('boom');
 const { Task } = require('../models');
-const { getQueryOptions } = require('../utils/service.util');
+const { getFilterOptions } = require('../utils/service.util');
 
-const createTask = async taskBody => {
-  const task = new Task(taskBody);
+const createTask = async (taskBody, userId) => {
+  const task = new Task({ ...taskBody, owner: userId });
   await task.save();
   return task;
 };
@@ -30,13 +30,13 @@ const deleteTask = async (taskId, userId) => {
 };
 
 const getTasks = async (query, userId) => {
-  const options = getQueryOptions(query);
-  const match = { owner: userId };
+  const options = getFilterOptions(query);
+  const filter = { owner: userId };
   if (typeof query.completed !== 'undefined') {
-    match.completed = query.completed === true;
+    filter.completed = query.completed === true;
   }
 
-  const tasks = await Task.find(match, null, options);
+  const tasks = await Task.find(filter, null, options);
   return tasks;
 };
 

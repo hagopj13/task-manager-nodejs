@@ -1,4 +1,4 @@
-const getQueryOptions = ({ limit, skip, sort }) => {
+const getFilterOptions = ({ limit, skip, sort }) => {
   const options = {};
   if (limit) {
     options.limit = parseInt(limit, 10);
@@ -16,5 +16,5 @@ const getQueryOptions = ({ limit, skip, sort }) => {
 };
 
 module.exports = {
-  getQueryOptions,
+  getFilterOptions,
 };
