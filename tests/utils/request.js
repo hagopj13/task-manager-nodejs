@@ -5,9 +5,9 @@ const request = async ({ method, url, headers, params, query, body }) => {
   const config = {
     method,
     url,
-    headers: headers || {},
-    params: query || {},
-    data: body || {},
+    headers,
+    params: query,
+    data: body,
   };
 
   let requestUrl = url;
