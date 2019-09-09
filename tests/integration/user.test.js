@@ -12,6 +12,7 @@ const {
   userOneAccessToken,
   userTwo,
   adminAccessToken,
+  allUsers,
   insertAllUsers,
 } = require('../fixtures/user.fixture');
 const { userOneTasks, insertTask } = require('../fixtures/task.fixture');
@@ -176,5 +177,35 @@ describe('User Route', () => {
     testUserNotFound(getReqConfig);
 
     testAccessRightOnAnotherUser(getReqConfig);
+  });
+
+  describe.only('GET /v1/users', async () => {
+    let query;
+    beforeEach(() => {
+      accessToken = adminAccessToken;
+      query = {};
+    });
+
+    const getReqConfig = () => {
+      return {
+        method: 'GET',
+        url: '/v1/users',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        query,
+      };
+    };
+
+    it('should successfully return all the users', async () => {
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.data).to.be.an('array');
+      expect(response.data).to.have.lengthOf(allUsers.length);
+      for (const [index, responseUser] of response.data.entries()) {
+        const dbUser = await Task.findById(allUsers[index]);
+        checkResponseUser(responseUser, dbUser);
+      }
+    });
+
+    testMissingAccessToken(getReqConfig);
   });
 });
