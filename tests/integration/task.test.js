@@ -9,6 +9,7 @@ const {
   testMissingAccessToken,
   testBodyValidation,
   testQueryFilter,
+  testUnknownQueryFilter,
   testQuerySort,
   testQueryLimit,
   testQuerySkip,
@@ -119,6 +120,7 @@ describe('Task Route', () => {
 
     testQueryFilter(getReqConfig, 'completed', true, userOneTasks);
     testQueryFilter(getReqConfig, 'completed', false, userOneTasks);
+    testUnknownQueryFilter(getReqConfig);
     testQuerySort(getReqConfig, '-completed', userOneTasks);
     testQueryLimit(getReqConfig, 1, userOneTasks);
     testQuerySkip(getReqConfig, 1, userOneTasks);

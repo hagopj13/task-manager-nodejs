@@ -63,6 +63,18 @@ const testQueryFilter = (getReqConfig, key, value, originalList) => {
   });
 };
 
+const testUnknownQueryFilter = getReqConfig => {
+  return it('should return a 400 error if an unknown field is specified in the query', async () => {
+    const config = getReqConfig();
+    if (!config.query) {
+      config.query = {};
+    }
+    config.query.unknownField = 'anyValue';
+    const response = await request(config);
+    checkValidationError(response);
+  });
+};
+
 const sortBy = (key, desc) => {
   return (a, b) => {
     if (a[key] === b[key]) {
@@ -130,6 +142,7 @@ module.exports = {
   testBodyValidation,
   testAdminOnlyAccess,
   testQueryFilter,
+  testUnknownQueryFilter,
   testQuerySort,
   testQueryLimit,
   testQuerySkip,

@@ -10,6 +10,7 @@ const {
   testBodyValidation,
   testAdminOnlyAccess,
   testQueryFilter,
+  testUnknownQueryFilter,
   testQuerySort,
   testQueryLimit,
   testQuerySkip,
@@ -219,6 +220,7 @@ describe('User Route', () => {
 
     testQueryFilter(getReqConfig, 'name', userOne.name, allUsers);
     testQueryFilter(getReqConfig, 'role', 'user', allUsers);
+    testUnknownQueryFilter(getReqConfig);
     testQuerySort(getReqConfig, '-role', allUsers);
     testQueryLimit(getReqConfig, 1, allUsers);
     testQuerySkip(getReqConfig, 1, allUsers);
