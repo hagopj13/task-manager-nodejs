@@ -187,7 +187,7 @@ describe('User Route', () => {
     testAccessRightOnAnotherUser(getReqConfig);
   });
 
-  describe.only('GET /v1/users', async () => {
+  describe('GET /v1/users', async () => {
     let query;
     beforeEach(() => {
       accessToken = adminAccessToken;
@@ -209,7 +209,7 @@ describe('User Route', () => {
       expect(response.data).to.be.an('array');
       expect(response.data).to.have.lengthOf(allUsers.length);
       for (const [index, responseUser] of response.data.entries()) {
-        const dbUser = await Task.findById(allUsers[index]);
+        const dbUser = await User.findById(allUsers[index]);
         checkResponseUser(responseUser, dbUser);
       }
     });
