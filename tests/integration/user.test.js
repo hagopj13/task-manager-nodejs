@@ -1,15 +1,11 @@
 const { expect } = require('chai');
-const request = require('supertest');
 const mongoose = require('mongoose');
 const httpStatus = require('http-status');
-const app = require('../../src/app');
+const request = require('../utils/request');
 const { User, Task } = require('../../src/models');
-const {
-  checkValidationError,
-  checkUnauthorizedError,
-  checkForbiddenError,
-} = require('../utils/checkError');
+const { checkValidationError, checkForbiddenError } = require('../utils/checkError');
 const { checkResponseUser } = require('../utils/checkResponse');
+const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const {
   userOne,
@@ -29,37 +25,19 @@ describe('User Route', () => {
     await insertAllUsers();
   });
 
-  const testMissingAccessToken = exec => {
-    return it('should return a 401 error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-  };
-
-  const testBodyValidation = (exec, testCases) => {
-    return testCases.forEach(({ message, body }) => {
-      it(`should return a 400 error if ${message}`, async () => {
-        reqBody = body;
-        const response = await exec();
-        checkValidationError(response);
-      });
-    });
-  };
-
-  const testUserNotFound = exec => {
+  const testUserNotFound = getReqConfig => {
     return it('should return a 404 if user is not found', async () => {
       accessToken = adminAccessToken;
       userId = mongoose.Types.ObjectId();
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
   };
 
-  const testAccessRightOnAnotherUser = exec => {
+  const testAccessRightOnAnotherUser = getReqConfig => {
     return it('should return a 403 error if user is not an admin but is trying to access another user', async () => {
       userId = userTwo._id.toHexString();
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkForbiddenError(response);
     });
   };
@@ -70,24 +48,27 @@ describe('User Route', () => {
       accessToken = userOneAccessToken;
     });
 
-    const exec = async () => {
-      return request(app)
-        .get(`/v1/users/${userId}`)
-        .set('Authorization', `Bearer ${accessToken}`);
+    const getReqConfig = () => {
+      return {
+        method: 'GET',
+        url: '/v1/users/:userId',
+        params: { userId },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
     };
 
     it('should successfully return 200 and user profile if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
       const dbUser = await User.findById(userOne._id);
-      checkResponseUser(response.body, dbUser);
+      checkResponseUser(response.data, dbUser);
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
-    testUserNotFound(exec);
+    testUserNotFound(getReqConfig);
 
-    testAccessRightOnAnotherUser(exec);
+    testAccessRightOnAnotherUser(getReqConfig);
   });
 
   describe('PATCH /v1/users/:userId', () => {
@@ -102,35 +83,38 @@ describe('User Route', () => {
       };
     });
 
-    const exec = async () => {
-      return request(app)
-        .patch(`/v1/users/${userId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(reqBody);
+    const getReqConfig = () => {
+      return {
+        method: 'PATCH',
+        url: '/v1/users/:userId',
+        params: { userId },
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: reqBody,
+      };
     };
 
     it('should successfully update user and return 200 if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
       delete reqBody.password;
-      expect(response.body).to.include(reqBody);
+      expect(response.data).to.include(reqBody);
 
       const dbUser = await User.findById(userId);
       expect(dbUser).to.include(reqBody);
-      checkResponseUser(response.body, dbUser);
+      checkResponseUser(response.data, dbUser);
     });
 
     it('should encrypt the password before storing', async () => {
-      const response = await exec();
-      const dbUser = await User.findById(response.body.id);
+      const response = await request(getReqConfig());
+      const dbUser = await User.findById(response.data.id);
       expect(dbUser.password).not.to.be.equal(reqBody.password);
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
-    testUserNotFound(exec);
+    testUserNotFound(getReqConfig);
 
-    testAccessRightOnAnotherUser(exec);
+    testAccessRightOnAnotherUser(getReqConfig);
 
     const bodyValidationTestCases = [
       { body: {}, message: 'no update fields are specified' },
@@ -139,19 +123,19 @@ describe('User Route', () => {
       { body: { password: 'Red123!' }, message: 'password is shorter than 8 characters' },
       { body: { age: -1 }, message: 'age is less than 0' },
     ];
-    testBodyValidation(exec, bodyValidationTestCases);
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
 
     it('should return a 401 error if email is duplicate and is not my email', async () => {
       reqBody.email = userTwo.email;
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkValidationError(response);
     });
 
     it('should not return a 401 error if email is duplicate but is my email', async () => {
       reqBody = { email: userOne.email };
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body.email).to.be.equal(reqBody.email);
+      expect(response.data.email).to.be.equal(reqBody.email);
     });
   });
 
@@ -161,14 +145,17 @@ describe('User Route', () => {
       accessToken = userOneAccessToken;
     });
 
-    const exec = async () => {
-      return request(app)
-        .delete(`/v1/users/${userId}`)
-        .set('Authorization', `Bearer ${accessToken}`);
+    const getReqConfig = () => {
+      return {
+        method: 'DELETE',
+        url: '/v1/users/:userId',
+        params: { userId },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
     };
 
     it('should successfully delete user and return 204 if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
       const dbUser = await User.findById(userOne._id);
@@ -179,15 +166,15 @@ describe('User Route', () => {
       userOneTasks.forEach(async task => {
         await insertTask(task);
       });
-      await exec();
+      await request(getReqConfig());
       const dbTasks = await Task.find({ owner: userOne._id });
       expect(dbTasks.length).to.be.equal(0);
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
-    testUserNotFound(exec);
+    testUserNotFound(getReqConfig);
 
-    testAccessRightOnAnotherUser(exec);
+    testAccessRightOnAnotherUser(getReqConfig);
   });
 });

@@ -53,6 +53,7 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
+    "axiosist": "^0.6.2",
     "chai": "^4.2.0",
     "codacy-coverage": "^3.4.0",
     "env-cmd": "^10.0.1",
@@ -70,7 +71,6 @@
     "nodemon": "^1.19.2",
     "nyc": "^14.1.1",
     "rewire": "^4.0.1",
-    "sinon": "^7.4.2",
-    "supertest": "^4.0.2"
+    "sinon": "^7.4.2"
   }
 }

@@ -1,18 +1,18 @@
 const { expect } = require('chai');
-const request = require('supertest');
 const sinon = require('sinon');
 const httpStatus = require('http-status');
 const httpMocks = require('node-mocks-http');
 const mongoose = require('mongoose');
 const moment = require('moment');
 const { omit, set } = require('lodash');
-const app = require('../../src/app');
+const request = require('../utils/request');
 const { User, RefreshToken } = require('../../src/models');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
 const { generateToken } = require('../../src/utils/auth.util');
 const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
 const { checkResponseTokens, checkResponseUser } = require('../utils/checkResponse');
+const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const {
   userOne,
@@ -30,16 +30,6 @@ describe('Auth Route', () => {
     await insertRefreshToken(userOneRefreshToken);
   });
 
-  const testBodyValidation = (exec, testCases) => {
-    return testCases.forEach(({ message, body }) => {
-      it(`should return a 400 error if ${message}`, async () => {
-        reqBody = body;
-        const response = await exec();
-        checkValidationError(response);
-      });
-    });
-  };
-
   describe('POST /v1/auth/register', () => {
     beforeEach(() => {
       reqBody = {
@@ -51,29 +41,31 @@ describe('Auth Route', () => {
       };
     });
 
-    const exec = async () => {
-      return request(app)
-        .post('/v1/auth/register')
-        .send(reqBody);
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/register',
+        body: reqBody,
+      };
     };
 
     it('should successfully register new user and return 201 if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      checkResponseTokens(response.body.tokens);
+      checkResponseTokens(response.data.tokens);
 
       delete reqBody.password;
-      expect(response.body.user).to.include(reqBody);
+      expect(response.data.user).to.include(reqBody);
 
-      const dbUser = await User.findById(response.body.user.id);
+      const dbUser = await User.findById(response.data.user.id);
       delete reqBody.password;
       expect(dbUser).to.include(reqBody);
-      checkResponseUser(response.body.user, dbUser);
+      checkResponseUser(response.data.user, dbUser);
     });
 
     it('should encrypt the password before storing', async () => {
-      const response = await exec();
-      const dbUser = await User.findById(response.body.user.id);
+      const response = await request(getReqConfig());
+      const dbUser = await User.findById(response.data.user.id);
       expect(dbUser.password).not.to.be.equal(reqBody.password);
     });
 
@@ -91,26 +83,26 @@ describe('Auth Route', () => {
       { body: set(reqBody, 'age', -1), message: 'age is less than 0' },
       { body: set(reqBody, 'role', 'invalidRole'), message: 'role is not user or admin' },
     ];
-    testBodyValidation(exec, bodyValidationTestCases);
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
 
     it('should return a 401 error if email is duplicate', async () => {
       reqBody.email = userOne.email;
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkValidationError(response);
     });
 
     it('should set the age by default to 0 if not given', async () => {
       delete reqBody.age;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      expect(response.body.user.age).to.be.equal(0);
+      expect(response.data.user.age).to.be.equal(0);
     });
 
     it('should set the role by default to user if not given', async () => {
       delete reqBody.role;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      expect(response.body.user.role).to.be.equal('user');
+      expect(response.data.user.role).to.be.equal('user');
     });
   });
 
@@ -122,37 +114,39 @@ describe('Auth Route', () => {
       };
     });
 
-    const exec = async () => {
-      return request(app)
-        .post('/v1/auth/login')
-        .send(reqBody);
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/login',
+        body: reqBody,
+      };
     };
 
     it('should successfully login and return 200 if correct email and password are provided', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkResponseTokens(response.body.tokens);
+      checkResponseTokens(response.data.tokens);
       const dbUser = await User.findById(userOne._id);
-      checkResponseUser(response.body.user, dbUser);
+      checkResponseUser(response.data.user, dbUser);
     });
 
     const bodyValidationTestCases = [
       { body: omit(reqBody, 'email'), message: 'email is missing' },
       { body: omit(reqBody, 'password'), message: 'password is missing' },
     ];
-    testBodyValidation(exec, bodyValidationTestCases);
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
 
     const loginErrorMessage = 'Incorrect email or password';
 
     it('should return a 401 error if user with such an email is not found', async () => {
       reqBody.email = 'unknownEmail@example.com';
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response, loginErrorMessage);
     });
 
     it('should return a 401 error if user password is wrong', async () => {
       reqBody.password = 'wrongPassword';
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response, loginErrorMessage);
     });
   });
@@ -169,19 +163,21 @@ describe('Auth Route', () => {
       reqBody = { refreshToken: userOneRefreshToken.token };
     });
 
-    const exec = async () => {
-      return request(app)
-        .post('/v1/auth/refreshToken')
-        .send(reqBody);
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/refreshToken',
+        body: reqBody,
+      };
     };
 
     it('should successfully refresh access token and return 200 if refresh token is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      checkResponseTokens(response.body);
+      checkResponseTokens(response.data);
 
       const dbRefreshToken = await RefreshToken.findOne({
-        token: response.body.refreshToken.token,
+        token: response.data.refreshToken.token,
       });
       expect(dbRefreshToken).to.be.ok;
       expect(dbRefreshToken.user).to.deep.equal(userOne._id);
@@ -189,7 +185,7 @@ describe('Auth Route', () => {
     });
 
     it('should delete the old refresh token after creating a new one', async () => {
-      await exec();
+      await request(getReqConfig());
       const oldRefreshToken = await RefreshToken.findOne({ token: userOneRefreshToken.token });
       expect(oldRefreshToken).not.to.be.ok;
     });
@@ -197,17 +193,17 @@ describe('Auth Route', () => {
     const bodyValidationTestCases = [
       { body: omit(reqBody, 'refreshToken'), message: 'refreshToken is missing' },
     ];
-    testBodyValidation(exec, bodyValidationTestCases);
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
 
     it('should return a 401 error if the refresh token is signed by an invalid secret', async () => {
       reqBody = { refreshToken: generateToken(userId, refreshTokenExpires, 'invalidSecret') };
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response);
     });
 
     it('should return a 401 error if the refresh token is not found', async () => {
       reqBody = { refreshToken: generateToken(userId, refreshTokenExpires) };
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response);
     });
 
@@ -226,21 +222,21 @@ describe('Auth Route', () => {
     it('should return a 401 error if the refresh token is blacklisted', async () => {
       blacklisted = true;
       await generateAndSaveRefreshToken();
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response);
     });
 
     it('should return a 401 error if the refresh token is expired', async () => {
       refreshTokenExpires.subtract(jwtConfig.refreshExpirationDays + 1, 'days');
       await generateAndSaveRefreshToken();
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response);
     });
 
     it('should return a 401 error if user is not found', async () => {
       userId = mongoose.Types.ObjectId();
       await generateAndSaveRefreshToken();
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkUnauthorizedError(response);
     });
   });
@@ -252,25 +248,23 @@ describe('Auth Route', () => {
       accessToken = userOneAccessToken;
     });
 
-    const exec = async () => {
-      return request(app)
-        .post('/v1/auth/logoutAll')
-        .set('Authorization', `Bearer ${accessToken}`);
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/logoutAll',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
     };
 
     it('should successfully delete all refresh tokens for the user and return 204', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
       const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOne._id });
       expect(dbRefreshTokenCount).to.be.equal(0);
     });
 
-    it('should return a 401 error if no access token is provided', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
+    testMissingAccessToken(getReqConfig);
   });
 
   describe('Auth middleware', () => {

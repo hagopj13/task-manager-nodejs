@@ -1,15 +1,11 @@
 const { expect } = require('chai');
-const request = require('supertest');
 const httpStatus = require('http-status');
 const mongoose = require('mongoose');
-const app = require('../../src/app');
+const request = require('../utils/request');
 const { Task } = require('../../src/models');
-const {
-  checkValidationError,
-  checkUnauthorizedError,
-  checkNotFoundError,
-} = require('../utils/checkError');
+const { checkNotFoundError } = require('../utils/checkError');
 const { checkResponseTask } = require('../utils/checkResponse');
+const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const { userOneAccessToken, userOne, insertUser } = require('../fixtures/user.fixture');
 const { taskOne, taskFour, userOneTasks, insertAllTasks } = require('../fixtures/task.fixture');
@@ -24,36 +20,18 @@ describe('Task Route', () => {
     await insertAllTasks();
   });
 
-  const testMissingAccessToken = exec => {
-    return it('should return a 401 error if access token is missing', async () => {
-      accessToken = null;
-      const response = await exec();
-      checkUnauthorizedError(response);
-    });
-  };
-
-  const testBodyValidation = (exec, testCases) => {
-    return testCases.forEach(({ message, body }) => {
-      it(`should return a 400 error if ${message}`, async () => {
-        reqBody = body;
-        const response = await exec();
-        checkValidationError(response);
-      });
-    });
-  };
-
-  const testTaskNotFound = exec => {
+  const testTaskNotFound = getReqConfig => {
     return it('should return a 404 error if task is not found', async () => {
       taskId = mongoose.Types.ObjectId();
-      const response = await exec();
+      const response = await request(getReqConfig());
       checkNotFoundError(response);
     });
   };
 
-  const testAccessRightsOnTask = exec => {
+  const testAccessRightsOnTask = getReqConfig => {
     return it('should return a 404 error if task belongs to another user', async () => {
       taskId = taskFour._id.toHexString();
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
     });
   };
@@ -67,38 +45,40 @@ describe('Task Route', () => {
       };
     });
 
-    const exec = async () => {
-      return request(app)
-        .post('/v1/tasks')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(reqBody);
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/tasks',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: reqBody,
+      };
     };
 
     it('should successfully create a new task and return 201 if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      expect(response.body).to.include(reqBody);
+      expect(response.data).to.include(reqBody);
 
-      const dbTask = await Task.findById(response.body.id);
+      const dbTask = await Task.findById(response.data.id);
       expect(dbTask).to.include(reqBody);
       expect(dbTask.owner).to.deep.equal(userOne._id);
-      checkResponseTask(response.body, dbTask);
+      checkResponseTask(response.data, dbTask);
     });
 
     it('should set completed to false if completed is missing', async () => {
       delete reqBody.completed;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
-      expect(response.body.completed).to.be.false;
+      expect(response.data.completed).to.be.false;
 
-      const dbTask = await Task.findById(response.body.id);
+      const dbTask = await Task.findById(response.data.id);
       expect(dbTask.completed).to.be.false;
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
     const bodyValidationTestCases = [{ body: {}, message: 'description is missing' }];
-    testBodyValidation(exec, bodyValidationTestCases);
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
   });
 
   describe('GET /v1/tasks', () => {
@@ -108,19 +88,21 @@ describe('Task Route', () => {
       query = {};
     });
 
-    const exec = async () => {
-      return request(app)
-        .get('/v1/tasks')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .query(query);
+    const getReqConfig = () => {
+      return {
+        method: 'GET',
+        url: '/v1/tasks',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        query,
+      };
     };
 
     it('should successfully return all the tasks that belong a specific user', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body).to.be.an('array');
-      expect(response.body).to.have.lengthOf(userOneTasks.length);
-      for (const [index, responseTask] of response.body.entries()) {
+      expect(response.data).to.be.an('array');
+      expect(response.data).to.have.lengthOf(userOneTasks.length);
+      for (const [index, responseTask] of response.data.entries()) {
         const dbTask = await Task.findById(userOneTasks[index]);
         checkResponseTask(responseTask, dbTask);
       }
@@ -128,47 +110,47 @@ describe('Task Route', () => {
 
     it('should return only completed tasks if completed query param is set to true', async () => {
       query.completed = true;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
       const numCompleteTasks = userOneTasks.filter(task => task.completed).length;
-      expect(response.body.length).to.be.equal(numCompleteTasks);
-      expect(response.body[0]).to.have.property('completed', true);
+      expect(response.data.length).to.be.equal(numCompleteTasks);
+      expect(response.data[0]).to.have.property('completed', true);
     });
 
     it('should return only incomplete tasks if completed query param is set to false', async () => {
       query.completed = false;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
       const numIncompleteTasks = userOneTasks.filter(task => !task.completed).length;
-      expect(response.body.length).to.be.equal(numIncompleteTasks);
-      expect(response.body[0]).to.have.property('completed', false);
+      expect(response.data.length).to.be.equal(numIncompleteTasks);
+      expect(response.data[0]).to.have.property('completed', false);
     });
 
     it('should sort tasks if sort query param is specified', async () => {
       query.sort = '-completed';
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
       const expectedTasksSorted = [...userOneTasks].sort((a, b) => b.completed - a.completed);
-      response.body.forEach((responseTask, index) => {
+      response.data.forEach((responseTask, index) => {
         expect(responseTask.id).to.be.equal(expectedTasksSorted[index]._id.toHexString());
       });
     });
 
     it('should limit tasks if limit query param is specified', async () => {
       query.limit = 1;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body.length).to.be.equal(query.limit);
+      expect(response.data.length).to.be.equal(query.limit);
     });
 
     it('should skip tasks if skip query param is specified', async () => {
       query.skip = 1;
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body.length).to.be.equal(userOneTasks.length - query.skip);
+      expect(response.data.length).to.be.equal(userOneTasks.length - query.skip);
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
   });
 
   describe('GET /v1/tasks/:taskId', () => {
@@ -177,25 +159,28 @@ describe('Task Route', () => {
       accessToken = userOneAccessToken;
     });
 
-    const exec = async () => {
-      return request(app)
-        .get(`/v1/tasks/${taskId}`)
-        .set('Authorization', `Bearer ${accessToken}`);
+    const getReqConfig = () => {
+      return {
+        method: 'GET',
+        url: '/v1/tasks/:taskId',
+        params: { taskId },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
     };
 
     it('should successfully return 200 and the task if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
 
       const dbTask = await Task.findById(taskId);
-      checkResponseTask(response.body, dbTask);
+      checkResponseTask(response.data, dbTask);
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
-    testTaskNotFound(exec);
+    testTaskNotFound(getReqConfig);
 
-    testAccessRightsOnTask(exec);
+    testAccessRightsOnTask(getReqConfig);
   });
 
   describe('PATCH /v1/tasks/:taskId', () => {
@@ -208,31 +193,34 @@ describe('Task Route', () => {
       };
     });
 
-    const exec = async () => {
-      return request(app)
-        .patch(`/v1/tasks/${taskId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(reqBody);
+    const getReqConfig = () => {
+      return {
+        method: 'PATCH',
+        url: '/v1/tasks/:taskId',
+        params: { taskId },
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: reqBody,
+      };
     };
 
     it('should successfully update the task and return 200 if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.OK);
-      expect(response.body).to.include(reqBody);
+      expect(response.data).to.include(reqBody);
 
       const dbTask = await Task.findById(taskOne._id);
       expect(dbTask).to.include(reqBody);
-      checkResponseTask(response.body, dbTask);
+      checkResponseTask(response.data, dbTask);
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
-    testTaskNotFound(exec);
+    testTaskNotFound(getReqConfig);
 
-    testAccessRightsOnTask(exec);
+    testAccessRightsOnTask(getReqConfig);
 
     const bodyValidationTestCases = [{ body: {}, message: 'no update fields are specified' }];
-    testBodyValidation(exec, bodyValidationTestCases);
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
   });
 
   describe('DELETE /v1/tasks/:taskId', () => {
@@ -241,24 +229,27 @@ describe('Task Route', () => {
       accessToken = userOneAccessToken;
     });
 
-    const exec = async () => {
-      return request(app)
-        .delete(`/v1/tasks/${taskId}`)
-        .set('Authorization', `Bearer ${accessToken}`);
+    const getReqConfig = () => {
+      return {
+        method: 'DELETE',
+        url: '/v1/tasks/:taskId',
+        params: { taskId },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      };
     };
 
     it('should successfully delete the task and return 204 if data is valid', async () => {
-      const response = await exec();
+      const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
       const dbTask = await Task.findById(taskId);
       expect(dbTask).not.to.be.ok;
     });
 
-    testMissingAccessToken(exec);
+    testMissingAccessToken(getReqConfig);
 
-    testTaskNotFound(exec);
+    testTaskNotFound(getReqConfig);
 
-    testAccessRightsOnTask(exec);
+    testAccessRightsOnTask(getReqConfig);
   });
 });
