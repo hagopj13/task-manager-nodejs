@@ -27,8 +27,6 @@ describe('User Route', () => {
   beforeEach(async () => {
     await clearDatabase();
     await insertAllUsers();
-    userId = userOne._id.toHexString();
-    accessToken = userOneAccessToken;
   });
 
   const testMissingAccessToken = exec => {
@@ -67,6 +65,11 @@ describe('User Route', () => {
   };
 
   describe('GET /v1/users/:userId', async () => {
+    beforeEach(() => {
+      userId = userOne._id.toHexString();
+      accessToken = userOneAccessToken;
+    });
+
     const exec = async () => {
       return request(app)
         .get(`/v1/users/${userId}`)
@@ -89,6 +92,8 @@ describe('User Route', () => {
 
   describe('PATCH /v1/users/:userId', () => {
     beforeEach(() => {
+      userId = userOne._id.toHexString();
+      accessToken = userOneAccessToken;
       reqBody = {
         email: 'valid@example.com',
         password: 'Red123456!',
@@ -151,6 +156,11 @@ describe('User Route', () => {
   });
 
   describe('DELETE /v1/users/:userId', () => {
+    beforeEach(() => {
+      userId = userOne._id.toHexString();
+      accessToken = userOneAccessToken;
+    });
+
     const exec = async () => {
       return request(app)
         .delete(`/v1/users/${userId}`)

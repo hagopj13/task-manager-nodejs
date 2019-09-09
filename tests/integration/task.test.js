@@ -22,7 +22,6 @@ describe('Task Route', () => {
     await clearDatabase();
     await insertUser(userOne);
     await insertAllTasks();
-    accessToken = userOneAccessToken;
   });
 
   const testMissingAccessToken = exec => {
@@ -61,6 +60,7 @@ describe('Task Route', () => {
 
   describe('POST /v1/tasks', () => {
     beforeEach(() => {
+      accessToken = userOneAccessToken;
       reqBody = {
         description: 'New task',
         completed: true,
@@ -104,6 +104,7 @@ describe('Task Route', () => {
   describe('GET /v1/tasks', () => {
     let query;
     beforeEach(() => {
+      accessToken = userOneAccessToken;
       query = {};
     });
 
@@ -173,6 +174,7 @@ describe('Task Route', () => {
   describe('GET /v1/tasks/:taskId', () => {
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
+      accessToken = userOneAccessToken;
     });
 
     const exec = async () => {
@@ -199,6 +201,7 @@ describe('Task Route', () => {
   describe('PATCH /v1/tasks/:taskId', () => {
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
+      accessToken = userOneAccessToken;
       reqBody = {
         description: 'New task description',
         completed: false,
@@ -235,6 +238,7 @@ describe('Task Route', () => {
   describe('DELETE /v1/tasks/:taskId', () => {
     beforeEach(() => {
       taskId = taskOne._id.toHexString();
+      accessToken = userOneAccessToken;
     });
 
     const exec = async () => {
