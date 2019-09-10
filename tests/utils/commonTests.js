@@ -11,9 +11,7 @@ const { userOneAccessToken, adminAccessToken } = require('../fixtures/user.fixtu
 const testMissingAccessToken = getReqConfig => {
   it('should return a 401 error if access token is missing', async () => {
     const config = getReqConfig();
-    if (config.headers) {
-      delete config.headers.Authorization;
-    }
+    delete (config.headers || {}).Authorization;
     const response = await request(config);
     checkUnauthorizedError(response);
   });
@@ -33,9 +31,7 @@ const testBodyValidation = (getReqConfig, testCases) => {
 const testAdminOnlyAccess = getReqConfig => {
   it('should allow access for admins, but deny it for users', async () => {
     const config = getReqConfig();
-    if (!config.headers) {
-      config.headers = {};
-    }
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${adminAccessToken}`;
     const allowedResponse = await request(config);
     expect(allowedResponse.status).to.be.below(300);
@@ -46,16 +42,14 @@ const testAdminOnlyAccess = getReqConfig => {
   });
 };
 
-const testQueryFilter = (getReqConfig, key, value, originalList) => {
+const testQueryFilter = (getReqConfig, key, value, originalArray) => {
   return it(`should correctly apply filter on ${key} with value ${value}`, async () => {
     const config = getReqConfig();
-    if (!config.query) {
-      config.query = {};
-    }
+    config.query = config.query || {};
     config.query[key] = value;
     const response = await request(config);
     expect(response.status).to.be.equal(httpStatus.OK);
-    const matchingElems = originalList.filter(elem => elem[key] === value);
+    const matchingElems = originalArray.filter(elem => elem[key] === value);
     expect(response.data).to.have.lengthOf(matchingElems.length);
     if (response.data.length) {
       expect(response.data[0]).to.have.property(key, value);
@@ -66,9 +60,7 @@ const testQueryFilter = (getReqConfig, key, value, originalList) => {
 const testUnknownQueryFilter = getReqConfig => {
   return it('should return a 400 error if an unknown field is specified in the query', async () => {
     const config = getReqConfig();
-    if (!config.query) {
-      config.query = {};
-    }
+    config.query = config.query || {};
     config.query.unknownField = 'anyValue';
     const response = await request(config);
     checkValidationError(response);
@@ -87,7 +79,7 @@ const sortBy = (key, desc) => {
   };
 };
 
-const testQuerySort = (getReqConfig, sort, originalList) => {
+const testQuerySort = (getReqConfig, sort, originalArray) => {
   let desc = false;
   let sortKey = sort;
   if (sort[0] === '-') {
@@ -96,43 +88,37 @@ const testQuerySort = (getReqConfig, sort, originalList) => {
   }
   return it(`should correctly apply sorting on ${sortKey}`, async () => {
     const config = getReqConfig();
-    if (!config.query) {
-      config.query = {};
-    }
+    config.query = config.query || {};
     config.query.sort = sort;
     const response = await request(config);
     expect(response.status).to.be.equal(httpStatus.OK);
-    const expectedList = [...originalList].sort(sortBy(sortKey, desc));
+    const expectedList = [...originalArray].sort(sortBy(sortKey, desc));
     response.data.forEach((responseElem, index) => {
       expect(responseElem.id).to.be.equal(expectedList[index]._id.toHexString());
     });
   });
 };
 
-const testQueryLimit = (getReqConfig, limit, originalList) => {
+const testQueryLimit = (getReqConfig, limit, originalArray) => {
   it('should limit returned elements if limit query param is specified', async () => {
     const config = getReqConfig();
-    if (!config.query) {
-      config.query = {};
-    }
+    config.query = config.query || {};
     config.query.limit = limit;
     const response = await request(config);
     expect(response.status).to.be.equal(httpStatus.OK);
-    const expectedLength = Math.min(limit, originalList.length);
+    const expectedLength = Math.min(limit, originalArray.length);
     expect(response.data).to.have.lengthOf(expectedLength);
   });
 };
 
-const testQuerySkip = (getReqConfig, skip, originalList) => {
+const testQuerySkip = (getReqConfig, skip, originalArray) => {
   it('should skip some elements if skip query param is specified', async () => {
     const config = getReqConfig();
-    if (!config.query) {
-      config.query = {};
-    }
+    config.query = config.query || {};
     config.query.skip = skip;
     const response = await request(config);
     expect(response.status).to.be.equal(httpStatus.OK);
-    const expectedLength = Math.max(0, originalList.length - skip);
+    const expectedLength = Math.max(0, originalArray.length - skip);
     expect(response.data).to.have.lengthOf(expectedLength);
   });
 };
