@@ -15,8 +15,20 @@ const {
   testQuerySkip,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
-const { userOneAccessToken, userOne, insertUser } = require('../fixtures/user.fixture');
-const { taskOne, taskFour, userOneTasks, insertAllTasks } = require('../fixtures/task.fixture');
+const {
+  userOne,
+  userOneAccessToken,
+  admin,
+  adminAccessToken,
+  insertUser,
+} = require('../fixtures/user.fixture');
+const {
+  taskOne,
+  taskFour,
+  userOneTasks,
+  allTasks,
+  insertAllTasks,
+} = require('../fixtures/task.fixture');
 
 describe('Task Route', () => {
   let accessToken;
@@ -25,6 +37,7 @@ describe('Task Route', () => {
   beforeEach(async () => {
     await clearDatabase();
     await insertUser(userOne);
+    await insertUser(admin);
     await insertAllTasks();
   });
 
@@ -36,11 +49,19 @@ describe('Task Route', () => {
     });
   };
 
-  const testAccessRightsOnTask = getReqConfig => {
-    return it('should return a 404 error if task belongs to another user', async () => {
+  const testUserAccessOnAnotherUsersTask = getReqConfig => {
+    return it('should return a 404 error if user is trying to access a task that belongs to another user', async () => {
       taskId = taskFour._id.toHexString();
       const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+    });
+  };
+
+  const testAdminAccessOnAnotherUsersTask = getReqConfig => {
+    return it('should not return an error if admin is trying to access a task that belongs to another user', async () => {
+      accessToken = adminAccessToken;
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.below(300);
     });
   };
 
@@ -124,6 +145,13 @@ describe('Task Route', () => {
     testQuerySort(getReqConfig, '-completed', userOneTasks);
     testQueryLimit(getReqConfig, 1, userOneTasks);
     testQuerySkip(getReqConfig, 1, userOneTasks);
+
+    it('should allow admins to retrieve all the tasks of all users', async () => {
+      accessToken = adminAccessToken;
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.OK);
+      expect(response.data).to.have.lengthOf(allTasks.length);
+    });
   });
 
   describe('GET /v1/tasks/:taskId', () => {
@@ -153,7 +181,8 @@ describe('Task Route', () => {
 
     testTaskNotFound(getReqConfig);
 
-    testAccessRightsOnTask(getReqConfig);
+    testUserAccessOnAnotherUsersTask(getReqConfig);
+    testAdminAccessOnAnotherUsersTask(getReqConfig);
   });
 
   describe('PATCH /v1/tasks/:taskId', () => {
@@ -190,7 +219,8 @@ describe('Task Route', () => {
 
     testTaskNotFound(getReqConfig);
 
-    testAccessRightsOnTask(getReqConfig);
+    testUserAccessOnAnotherUsersTask(getReqConfig);
+    testAdminAccessOnAnotherUsersTask(getReqConfig);
 
     const bodyValidationTestCases = [{ body: {}, message: 'no update fields are specified' }];
     testBodyValidation(getReqConfig, bodyValidationTestCases);
@@ -223,6 +253,7 @@ describe('Task Route', () => {
 
     testTaskNotFound(getReqConfig);
 
-    testAccessRightsOnTask(getReqConfig);
+    testUserAccessOnAnotherUsersTask(getReqConfig);
+    testAdminAccessOnAnotherUsersTask(getReqConfig);
   });
 });
