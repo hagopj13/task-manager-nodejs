@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const httpStatus = require('http-status');
-const request = require('../utils/request');
+const request = require('../utils/testRequest');
 
 describe('Errors', () => {
   describe('Unknown request', () => {

@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const httpStatus = require('http-status');
 const mongoose = require('mongoose');
-const request = require('../utils/request');
+const request = require('../utils/testRequest');
 const { Task } = require('../../src/models');
 const { checkNotFoundError } = require('../utils/checkError');
 const { checkResponseTask } = require('../utils/checkResponse');

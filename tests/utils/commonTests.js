@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const httpStatus = require('http-status');
-const request = require('./request');
+const request = require('./testRequest');
 const {
   checkUnauthorizedError,
   checkValidationError,
@@ -42,17 +42,17 @@ const testAdminOnlyAccess = getReqConfig => {
   });
 };
 
-const testQueryFilter = (getReqConfig, key, value, originalArray) => {
-  return it(`should correctly apply filter on ${key} with value ${value}`, async () => {
+const testQueryFilter = (getReqConfig, filterKey, filterValue, originalArray) => {
+  return it(`should correctly apply filter on ${filterKey} with value ${filterValue}`, async () => {
     const config = getReqConfig();
     config.query = config.query || {};
-    config.query[key] = value;
+    config.query[filterKey] = filterValue;
     const response = await request(config);
     expect(response.status).to.be.equal(httpStatus.OK);
-    const matchingElems = originalArray.filter(elem => elem[key] === value);
+    const matchingElems = originalArray.filter(elem => elem[filterKey] === filterValue);
     expect(response.data).to.have.lengthOf(matchingElems.length);
     if (response.data.length) {
-      expect(response.data[0]).to.have.property(key, value);
+      expect(response.data[0]).to.have.property(filterKey, filterValue);
     }
   });
 };
