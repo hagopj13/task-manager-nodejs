@@ -114,7 +114,7 @@ describe('User Route', () => {
       checkResponseUser(response.data, dbUser);
     });
 
-    it('should encrypt the password before storing', async () => {
+    it('should encrypt the password before updating user', async () => {
       const response = await request(getReqConfig());
       const dbUser = await User.findById(response.data.id);
       expect(dbUser.password).not.to.be.equal(reqBody.password);

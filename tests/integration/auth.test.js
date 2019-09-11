@@ -63,7 +63,7 @@ describe('Auth Route', () => {
       checkResponseUser(response.data.user, dbUser);
     });
 
-    it('should encrypt the password before storing', async () => {
+    it('should encrypt the password before creating user', async () => {
       const response = await request(getReqConfig());
       const dbUser = await User.findById(response.data.user.id);
       expect(dbUser.password).not.to.be.equal(reqBody.password);
