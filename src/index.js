@@ -2,16 +2,22 @@ const { port } = require('./config/config');
 const logger = require('./config/logger');
 const app = require('./app');
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(`Listening to port ${port}`);
 });
 
+const closeServer = () => {
+  server.close(() => {
+    process.exit(1);
+  });
+};
+
 process.on('uncaughtException', e => {
   logger.error(e);
-  process.exit(1);
+  closeServer();
 });
 
 process.on('unhandledRejection', e => {
   logger.error(e);
-  process.exit(1);
+  closeServer();
 });
