@@ -85,15 +85,13 @@ describe('Error middleware tests', () => {
     let sendSpy;
     let error;
     const next = () => {};
-    let statusCode;
-    let errorMessage;
+    const statusCode = httpStatus.BAD_REQUEST;
+    const errorMessage = 'error message';
 
     beforeEach(() => {
       req = httpMocks.createRequest();
       res = httpMocks.createResponse();
       sendSpy = sinon.spy(res, 'send');
-      statusCode = httpStatus.BAD_REQUEST;
-      errorMessage = 'error message';
     });
 
     const checkErrorResponse = expectedResponse => {
