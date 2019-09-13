@@ -13,8 +13,7 @@ const checkDuplicateEmail = async (email, excludeUserId) => {
 
 const createUser = async userBody => {
   await checkDuplicateEmail(userBody.email);
-  const user = new User(userBody);
-  await user.save();
+  const user = await User.create(userBody);
   return user;
 };
 

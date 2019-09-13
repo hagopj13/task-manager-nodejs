@@ -4,8 +4,7 @@ const { Task } = require('../models');
 const { getQueryFilter, getQueryOptions } = require('../utils/service.util');
 
 const createTask = async (taskBody, user) => {
-  const task = new Task({ ...taskBody, owner: user._id });
-  await task.save();
+  const task = await Task.create({ ...taskBody, owner: user._id });
   return task;
 };
 

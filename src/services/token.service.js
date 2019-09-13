@@ -18,8 +18,11 @@ const generateAccessToken = user => {
 const generateRefreshToken = async user => {
   const expires = moment().add(jwtConfig.refreshExpirationDays, 'days');
   const token = generateToken(user._id, expires);
-  const refreshToken = new RefreshToken({ token, user: user._id, expires: expires.toDate() });
-  await refreshToken.save();
+  const refreshToken = await RefreshToken.create({
+    token,
+    user: user._id,
+    expires: expires.toDate(),
+  });
   return refreshToken.transform();
 };
 
