@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const request = require('../utils/testRequest');
 const { User, Task } = require('../../src/models');
-const { checkValidationError, checkForbiddenError } = require('../utils/checkError');
+const {
+  checkValidationError,
+  checkForbiddenError,
+  checkNotFoundError,
+} = require('../utils/checkError');
 const { checkResponseUser } = require('../utils/checkResponse');
 const {
   testMissingAccessToken,
@@ -40,7 +44,7 @@ describe('User Route', () => {
       accessToken = adminAccessToken;
       userId = mongoose.Types.ObjectId();
       const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+      checkNotFoundError(response);
     });
   };
 

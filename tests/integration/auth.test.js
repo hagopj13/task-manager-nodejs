@@ -10,6 +10,7 @@ const { User, RefreshToken } = require('../../src/models');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
 const { generateToken } = require('../../src/utils/auth.util');
+const { AppError } = require('../../src/utils/error.util');
 const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
 const { checkResponseTokens, checkResponseUser } = require('../utils/checkResponse');
 const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
@@ -309,23 +310,21 @@ describe('Auth Route', () => {
       expect(nextSpy.firstCall.args.length).to.be.equal(1);
       const nextArg = nextSpy.firstCall.args[0];
       expect(nextArg).to.be.ok;
-      expect(nextArg.isBoom).to.be.true;
+      expect(nextArg instanceof AppError).to.be.true;
       return nextArg;
     };
 
     const checkUnauthorizedAuth = () => {
       const err = checkFailingAuth();
-      const { statusCode, error, message } = err.output.payload;
+      const { statusCode, message } = err;
       expect(statusCode).to.be.equal(httpStatus.UNAUTHORIZED);
-      expect(error).to.be.equal(httpStatus[httpStatus.UNAUTHORIZED]);
       expect(message).to.be.equal('Please authenticate');
     };
 
     const checkForbiddenAuth = () => {
       const err = checkFailingAuth();
-      const { statusCode, error, message } = err.output.payload;
+      const { statusCode, message } = err;
       expect(statusCode).to.be.equal(httpStatus.FORBIDDEN);
-      expect(error).to.be.equal(httpStatus[httpStatus.FORBIDDEN]);
       expect(message).to.be.equal('Forbidden');
     };
 

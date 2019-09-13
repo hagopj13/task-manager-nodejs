@@ -1,12 +1,13 @@
-const Boom = require('boom');
 const bcrypt = require('bcryptjs');
+const httpStatus = require('http-status');
+const { AppError } = require('../utils/error.util');
 const { User, Task } = require('../models');
 const { getQueryFilter, getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
   const user = await User.findOne({ email, _id: { $ne: excludeUserId } });
   if (user) {
-    throw Boom.badRequest('Email is already used');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Email is already used');
   }
 };
 
@@ -20,7 +21,7 @@ const createUser = async userBody => {
 const getUser = async userId => {
   const user = await User.findById(userId);
   if (!user) {
-    throw Boom.notFound('User not found');
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
   return user;
 };
@@ -43,11 +44,11 @@ const deleteUser = async userId => {
 const loginUser = async (email, password) => {
   const user = await User.findOne({ email });
   if (!user) {
-    throw Boom.unauthorized('Incorrect email or password');
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
   const isPasswordMatch = await bcrypt.compare(password, user.password);
   if (!isPasswordMatch) {
-    throw Boom.unauthorized('Incorrect email or password');
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
   return user;
 };

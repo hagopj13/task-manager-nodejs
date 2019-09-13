@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
 const { userService } = require('../services');
-const { catchAsync } = require('../utils/controller.utils');
+const { catchAsync } = require('../utils/controller.util');
 
 const getUser = catchAsync(async (req, res) => {
   const user = await userService.getUser(req.params.userId);

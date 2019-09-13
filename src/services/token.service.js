@@ -1,12 +1,13 @@
-const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
+const httpStatus = require('http-status');
+const { AppError } = require('../utils/error.util');
 const { jwt: jwtConfig } = require('../config/config');
 const { User } = require('../models');
 const { generateToken } = require('../utils/auth.util');
 const { RefreshToken } = require('../models');
 
-const unauthorizedError = Boom.unauthorized('Please authenticate');
+const unauthorizedError = new AppError(httpStatus.UNAUTHORIZED, 'Please authenticate');
 
 const generateAccessToken = user => {
   const expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');

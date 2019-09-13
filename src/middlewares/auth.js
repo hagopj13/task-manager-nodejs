@@ -1,10 +1,11 @@
 const passport = require('passport');
-const Boom = require('boom');
+const httpStatus = require('http-status');
+const { AppError } = require('../utils/error.util');
 const { roleRights } = require('../config/roles');
 
 const verifyCallback = (req, resolve, reject, requiredRights) => async (err, user, info) => {
   if (err || info || !user) {
-    return reject(Boom.unauthorized('Please authenticate'));
+    return reject(new AppError(httpStatus.UNAUTHORIZED, 'Please authenticate'));
   }
   req.user = user;
 
@@ -14,7 +15,7 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
       userRights.includes(requiredRight)
     );
     if (!hasRequiredRights && req.params.userId !== user.id) {
-      return reject(Boom.forbidden('Forbidden'));
+      return reject(new AppError(httpStatus.FORBIDDEN, 'Forbidden'));
     }
   }
 

@@ -3,8 +3,7 @@ const httpStatus = require('http-status');
 
 const checkError = (response, status, message) => {
   expect(response.status).to.be.equal(status);
-  expect(response.data).to.have.property('status', status);
-  expect(response.data).to.have.property('error', httpStatus[status]);
+  expect(response.data).to.have.property('code', status);
   expect(response.data).to.have.property('message');
   if (message) {
     expect(response.data.message).to.be.equal(message);

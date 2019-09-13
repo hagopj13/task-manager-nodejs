@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
 const { taskService } = require('../services');
-const { catchAsync } = require('../utils/controller.utils');
+const { catchAsync } = require('../utils/controller.util');
 
 const createTask = catchAsync(async (req, res) => {
   const task = await taskService.createTask(req.body, req.user);

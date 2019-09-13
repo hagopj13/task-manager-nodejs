@@ -1,4 +1,5 @@
-const Boom = require('boom');
+const httpStatus = require('http-status');
+const { AppError } = require('../utils/error.util');
 const { Task } = require('../models');
 const { getQueryFilter, getQueryOptions } = require('../utils/service.util');
 
@@ -15,7 +16,7 @@ const getTask = async (taskId, user) => {
   };
   const task = await Task.findOne(filter);
   if (!task) {
-    throw Boom.notFound('Task not found');
+    throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
   }
   return task;
 };

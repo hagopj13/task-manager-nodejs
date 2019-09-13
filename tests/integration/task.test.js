@@ -53,7 +53,7 @@ describe('Task Route', () => {
     return it('should return a 404 error if user is trying to access a task that belongs to another user', async () => {
       taskId = taskFour._id.toHexString();
       const response = await request(getReqConfig());
-      expect(response.status).to.be.equal(httpStatus.NOT_FOUND);
+      checkNotFoundError(response);
     });
   };
 

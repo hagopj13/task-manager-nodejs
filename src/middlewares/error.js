@@ -1,38 +1,38 @@
-const Boom = require('boom');
+const httpStatus = require('http-status');
 const { env } = require('../config/config');
+const { AppError } = require('../utils/error.util');
 
 const errorConverter = (err, req, res, next) => {
   let error = err;
-  if (!error.isBoom) {
-    const statusCode = error.statusCode || 500;
-    res.locals.originalErrorMessage = error.message || '';
-    error = new Boom(error, { statusCode });
+  if (!(error instanceof AppError)) {
+    const statusCode = error.statusCode || httpStatus.INTERNAL_SERVER_ERROR;
+    const message = error.message || httpStatus[statusCode];
+    error = new AppError(statusCode, message, false);
   }
-
   next(error);
 };
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-  let errorObj = err;
-  if (!(errorObj instanceof Boom)) {
-    errorObj = Boom.badImplementation();
-  }
-  const { statusCode: status, error, message } = errorObj.output.payload;
-  const response = { status, error, message };
-
-  if (env === 'development') {
-    response.stack = errorObj.stack;
+  let { statusCode, message } = err;
+  if (env === 'production' && !err.isOperational) {
+    statusCode = httpStatus.INTERNAL_SERVER_ERROR;
+    message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR];
   }
 
-  res.locals.errorMessage =
-    status === 500 && res.locals.originalErrorMessage ? res.locals.originalErrorMessage : message;
+  res.locals.errorMessage = err.message;
 
-  res.status(status).send(response);
+  const response = {
+    code: statusCode,
+    message,
+    ...(env === 'development' && { stack: err.stack }),
+  };
+
+  res.status(statusCode).send(response);
 };
 
 const notFoundError = (req, res, next) => {
-  next(Boom.notFound());
+  next(new AppError(httpStatus.NOT_FOUND, 'Not found'));
 };
 
 module.exports = {
