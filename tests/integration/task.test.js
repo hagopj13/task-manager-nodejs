@@ -18,9 +18,8 @@ const { clearDatabase } = require('../fixtures');
 const {
   userOne,
   userOneAccessToken,
-  admin,
   adminAccessToken,
-  insertUser,
+  insertAllUsers,
 } = require('../fixtures/user.fixture');
 const {
   taskOne,
@@ -36,8 +35,7 @@ describe('Task Route', () => {
   let reqBody;
   beforeEach(async () => {
     await clearDatabase();
-    await insertUser(userOne);
-    await insertUser(admin);
+    await insertAllUsers();
     await insertAllTasks();
   });
 

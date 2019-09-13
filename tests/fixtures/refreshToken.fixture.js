@@ -15,13 +15,11 @@ const userOneRefreshToken = {
 const allRefreshTokens = [userOneRefreshToken];
 
 const insertRefreshToken = async refreshToken => {
-  await new RefreshToken(refreshToken).save();
+  await RefreshToken.create(refreshToken);
 };
 
 const insertAllRefreshTokens = async () => {
-  for (const refreshToken of allRefreshTokens) {
-    await insertRefreshToken(refreshToken);
-  }
+  await RefreshToken.insertMany(allRefreshTokens);
 };
 
 module.exports = {

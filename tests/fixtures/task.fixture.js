@@ -34,13 +34,11 @@ const userOneTasks = [taskOne, taskTwo, taskThree];
 const allTasks = [taskOne, taskTwo, taskThree, taskFour];
 
 const insertTask = async task => {
-  await new Task(task).save();
+  await Task.create(task);
 };
 
 const insertAllTasks = async () => {
-  for (const task of allTasks) {
-    await insertTask(task);
-  }
+  await Task.insertMany(allTasks);
 };
 
 module.exports = {
