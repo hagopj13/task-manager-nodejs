@@ -47,6 +47,8 @@ const userSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    toObject: { getters: true },
+    toJSON: { getters: true },
   }
 );
 
@@ -57,7 +59,7 @@ userSchema.methods.toJSON = function() {
 
 userSchema.methods.transform = function() {
   const user = this;
-  return pick(user, ['id', 'email', 'name', 'age', 'role']);
+  return pick(user.toJSON(), ['id', 'email', 'name', 'age', 'role']);
 };
 
 userSchema.pre('save', async function(next) {

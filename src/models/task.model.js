@@ -19,12 +19,14 @@ const taskSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    toObject: { getters: true },
+    toJSON: { getters: true },
   }
 );
 
 taskSchema.methods.transform = function() {
   const task = this;
-  return pick(task, ['id', 'description', 'completed', 'owner']);
+  return pick(task.toJSON(), ['id', 'description', 'completed', 'owner']);
 };
 
 const Task = mongoose.model('Task', taskSchema);

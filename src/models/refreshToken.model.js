@@ -24,12 +24,14 @@ const refreshTokenSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    toObject: { getters: true },
+    toJSON: { getters: true },
   }
 );
 
 refreshTokenSchema.methods.transform = function() {
   const refreshToken = this;
-  return pick(refreshToken, ['token', 'expires']);
+  return pick(refreshToken.toJSON(), ['token', 'expires']);
 };
 
 const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
