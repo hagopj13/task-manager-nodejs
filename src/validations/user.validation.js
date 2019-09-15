@@ -1,14 +1,14 @@
-const Joi = require('@hapi/joi');
+const Joi = require('../utils/validation.util');
 
 const getUser = {
   params: Joi.object().keys({
-    userId: Joi.string().required(),
+    userId: Joi.objectId().required(),
   }),
 };
 
 const updateUser = {
   params: Joi.object().keys({
-    userId: Joi.string().required(),
+    userId: Joi.objectId().required(),
   }),
   body: Joi.object().keys({
     email: Joi.string().email(),
@@ -20,7 +20,7 @@ const updateUser = {
 
 const deleteUser = {
   params: Joi.object().keys({
-    userId: Joi.string().required(),
+    userId: Joi.objectId().required(),
   }),
 };
 

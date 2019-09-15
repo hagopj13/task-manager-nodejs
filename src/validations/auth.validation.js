@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('../utils/validation.util');
 
 const register = {
   body: Joi.object().keys({

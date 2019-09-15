@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('../utils/validation.util');
 
 const createTask = {
   body: Joi.object().keys({
@@ -18,7 +18,7 @@ const getTasks = {
 
 const getTask = {
   params: Joi.object().keys({
-    taskId: Joi.string().required(),
+    taskId: Joi.objectId().required(),
   }),
 };
 
