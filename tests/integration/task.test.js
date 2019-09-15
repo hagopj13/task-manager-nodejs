@@ -13,6 +13,7 @@ const {
   testQuerySort,
   testQueryLimit,
   testQuerySkip,
+  testInvalidParamId,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const {
@@ -177,6 +178,7 @@ describe('Task Route', () => {
 
     testMissingAccessToken(getReqConfig);
 
+    testInvalidParamId(getReqConfig, 'taskId');
     testTaskNotFound(getReqConfig);
 
     testUserAccessOnAnotherUsersTask(getReqConfig);
@@ -215,6 +217,7 @@ describe('Task Route', () => {
 
     testMissingAccessToken(getReqConfig);
 
+    testInvalidParamId(getReqConfig, 'taskId');
     testTaskNotFound(getReqConfig);
 
     testUserAccessOnAnotherUsersTask(getReqConfig);
@@ -249,6 +252,7 @@ describe('Task Route', () => {
 
     testMissingAccessToken(getReqConfig);
 
+    testInvalidParamId(getReqConfig, 'taskId');
     testTaskNotFound(getReqConfig);
 
     testUserAccessOnAnotherUsersTask(getReqConfig);

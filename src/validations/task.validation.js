@@ -24,7 +24,7 @@ const getTask = {
 
 const updateTask = {
   params: Joi.object().keys({
-    taskId: Joi.string().required(),
+    taskId: Joi.objectId().required(),
   }),
   body: Joi.object().keys({
     description: Joi.string(),
@@ -34,7 +34,7 @@ const updateTask = {
 
 const deleteTask = {
   params: Joi.object().keys({
-    taskId: Joi.string().required(),
+    taskId: Joi.objectId().required(),
   }),
 };
 

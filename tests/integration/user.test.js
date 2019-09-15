@@ -18,6 +18,7 @@ const {
   testQuerySort,
   testQueryLimit,
   testQuerySkip,
+  testInvalidParamId,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const {
@@ -80,6 +81,7 @@ describe('User Route', () => {
 
     testMissingAccessToken(getReqConfig);
 
+    testInvalidParamId(getReqConfig, 'userId');
     testUserNotFound(getReqConfig);
 
     testAccessRightOnAnotherUser(getReqConfig);
@@ -126,6 +128,7 @@ describe('User Route', () => {
 
     testMissingAccessToken(getReqConfig);
 
+    testInvalidParamId(getReqConfig, 'userId');
     testUserNotFound(getReqConfig);
 
     testAccessRightOnAnotherUser(getReqConfig);
@@ -187,6 +190,7 @@ describe('User Route', () => {
 
     testMissingAccessToken(getReqConfig);
 
+    testInvalidParamId(getReqConfig, 'userId');
     testUserNotFound(getReqConfig);
 
     testAccessRightOnAnotherUser(getReqConfig);

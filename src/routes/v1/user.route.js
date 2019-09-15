@@ -6,12 +6,12 @@ const { userController } = require('../../controllers');
 
 const router = express.Router();
 
-router.route('/').get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
+router.route('/').get(validate(userValidation.getUsers), auth('getUsers'), userController.getUsers);
 
 router
   .route('/:userId')
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
-  .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
-  .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
+  .get(validate(userValidation.getUser), auth('getUsers'), userController.getUser)
+  .patch(validate(userValidation.updateUser), auth('manageUsers'), userController.updateUser)
+  .delete(validate(userValidation.deleteUser), auth('manageUsers'), userController.deleteUser);
 
 module.exports = router;

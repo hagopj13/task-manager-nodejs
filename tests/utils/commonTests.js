@@ -9,7 +9,7 @@ const {
 const { userOneAccessToken, adminAccessToken } = require('../fixtures/user.fixture');
 
 const testMissingAccessToken = getReqConfig => {
-  it('should return a 401 error if access token is missing', async () => {
+  return it('should return a 401 error if access token is missing', async () => {
     const config = getReqConfig();
     delete (config.headers || {}).Authorization;
     const response = await request(config);
@@ -29,7 +29,7 @@ const testBodyValidation = (getReqConfig, testCases) => {
 };
 
 const testAdminOnlyAccess = getReqConfig => {
-  it('should allow access for admins, but deny it for users', async () => {
+  return it('should allow access for admins, but deny it for users', async () => {
     const config = getReqConfig();
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${adminAccessToken}`;
@@ -100,7 +100,7 @@ const testQuerySort = (getReqConfig, sort, originalArray) => {
 };
 
 const testQueryLimit = (getReqConfig, limit, originalArray) => {
-  it('should limit returned elements if limit query param is specified', async () => {
+  return it('should limit returned elements if limit query param is specified', async () => {
     const config = getReqConfig();
     config.query = config.query || {};
     config.query.limit = limit;
@@ -112,7 +112,7 @@ const testQueryLimit = (getReqConfig, limit, originalArray) => {
 };
 
 const testQuerySkip = (getReqConfig, skip, originalArray) => {
-  it('should skip some elements if skip query param is specified', async () => {
+  return it('should skip some elements if skip query param is specified', async () => {
     const config = getReqConfig();
     config.query = config.query || {};
     config.query.skip = skip;
@@ -120,6 +120,15 @@ const testQuerySkip = (getReqConfig, skip, originalArray) => {
     expect(response.status).to.be.equal(httpStatus.OK);
     const expectedLength = Math.max(0, originalArray.length - skip);
     expect(response.data).to.have.lengthOf(expectedLength);
+  });
+};
+
+const testInvalidParamId = (getReqConfig, paramKey) => {
+  return it(`should return a 400 error if ${paramKey} is not a valid mongo id`, async () => {
+    const config = getReqConfig();
+    config.params[paramKey] = 'invalidId';
+    const response = await request(config);
+    checkValidationError(response);
   });
 };
 
@@ -132,4 +141,5 @@ module.exports = {
   testQuerySort,
   testQueryLimit,
   testQuerySkip,
+  testInvalidParamId,
 };

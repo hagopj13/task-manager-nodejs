@@ -8,13 +8,13 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth(), validate(taskValidation.createTask), taskController.createTask)
-  .get(auth(), validate(taskValidation.getTasks), taskController.getTasks);
+  .post(validate(taskValidation.createTask), auth(), taskController.createTask)
+  .get(validate(taskValidation.getTasks), auth(), taskController.getTasks);
 
 router
   .route('/:taskId')
-  .get(auth(), validate(taskValidation.getTask), taskController.getTask)
-  .patch(auth(), validate(taskValidation.updateTask), taskController.updateTask)
-  .delete(auth(), validate(taskValidation.deleteTask), taskController.deleteTask);
+  .get(validate(taskValidation.getTask), auth(), taskController.getTask)
+  .patch(validate(taskValidation.updateTask), auth(), taskController.updateTask)
+  .delete(validate(taskValidation.deleteTask), auth(), taskController.deleteTask);
 
 module.exports = router;
