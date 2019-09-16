@@ -38,7 +38,6 @@ describe('Auth Route', () => {
         email: 'john@example.com',
         password: 'White1234!',
         age: 22,
-        role: 'user',
       };
     });
 
@@ -82,7 +81,7 @@ describe('Auth Route', () => {
       { body: set(reqBody, 'password', 'short'), message: 'password is shorter than 8 characters' },
       { body: omit(reqBody, 'name'), message: 'name is missing' },
       { body: set(reqBody, 'age', -1), message: 'age is less than 0' },
-      { body: set(reqBody, 'role', 'invalidRole'), message: 'role is not user or admin' },
+      { body: set(reqBody, 'role', 'admin'), message: 'role is specified' },
     ];
     testBodyValidation(getReqConfig, bodyValidationTestCases);
 
@@ -99,7 +98,7 @@ describe('Auth Route', () => {
       expect(response.data.user.age).to.be.equal(0);
     });
 
-    it('should set the role by default to user if not given', async () => {
+    it('should set the role by default to user', async () => {
       delete reqBody.role;
       const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
