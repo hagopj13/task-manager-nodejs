@@ -99,7 +99,6 @@ describe('Auth Route', () => {
     });
 
     it('should set the role by default to user', async () => {
-      delete reqBody.role;
       const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.CREATED);
       expect(response.data.user.role).to.be.equal('user');
