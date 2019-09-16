@@ -1,5 +1,8 @@
 const express = require('express');
 const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 const compression = require('compression');
 const cors = require('cors');
 const methodOverride = require('method-override');
@@ -16,12 +19,17 @@ const app = express();
 app.use(successResponseMorgan);
 app.use(errorResponseMorgan);
 
+app.use(helmet());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(mongoSanitize());
+app.use(xss());
+app.use(hpp());
+
 app.use(compression());
 app.use(methodOverride());
-app.use(helmet());
 app.use(cors());
 
 app.use(passport.initialize());
