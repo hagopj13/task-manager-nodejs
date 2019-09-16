@@ -1,6 +1,11 @@
 {
-  "extends": ["airbnb-base", "plugin:prettier/recommended", "plugin:promise/recommended"],
-  "plugins": ["chai-friendly"],
+  "extends": [
+    "airbnb-base",
+    "plugin:prettier/recommended",
+    "plugin:promise/recommended",
+    "plugin:security/recommended"
+  ],
+  "plugins": ["chai-friendly", "security"],
   "env": {
     "node": true,
     "mocha": true
@@ -17,6 +22,7 @@
     "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
     "promise/no-callback-in-promise": "off",
     "promise/no-promise-in-callback": "off",
+    "security/detect-object-injection": "off",
     "no-unused-expressions": "off",
     "chai-friendly/no-unused-expressions": "error"
   }
