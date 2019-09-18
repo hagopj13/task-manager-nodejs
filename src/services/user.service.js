@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
 const httpStatus = require('http-status');
+const { pick } = require('lodash');
 const { AppError } = require('../utils/error.util');
 const { User, Task } = require('../models');
-const { getQueryFilter, getQueryOptions } = require('../utils/service.util');
+const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
   const user = await User.findOne({ email, _id: { $ne: excludeUserId } });
@@ -53,7 +54,7 @@ const loginUser = async (email, password) => {
 };
 
 const getUsers = async query => {
-  const filter = getQueryFilter(query, ['name', 'role']);
+  const filter = pick(query, ['name', 'role']);
   const options = getQueryOptions(query);
 
   const users = await User.find(filter, null, options);

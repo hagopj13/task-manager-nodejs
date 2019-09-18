@@ -1,13 +1,3 @@
-const getQueryFilter = (query, params) => {
-  const queryFilter = {};
-  params.forEach(param => {
-    if (typeof query[param] !== 'undefined') {
-      queryFilter[param] = query[param];
-    }
-  });
-  return queryFilter;
-};
-
 const getQueryOptions = ({ limit, skip, sort }) => {
   const options = {
     ...(limit && { limit: parseInt(limit, 10) }),
@@ -19,6 +9,5 @@ const getQueryOptions = ({ limit, skip, sort }) => {
 };
 
 module.exports = {
-  getQueryFilter,
   getQueryOptions,
 };

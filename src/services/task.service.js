@@ -1,7 +1,8 @@
 const httpStatus = require('http-status');
+const { pick } = require('lodash');
 const { AppError } = require('../utils/error.util');
 const { Task } = require('../models');
-const { getQueryFilter, getQueryOptions } = require('../utils/service.util');
+const { getQueryOptions } = require('../utils/service.util');
 
 const createTask = async (taskBody, user) => {
   const task = await Task.create({ ...taskBody, owner: user._id });
@@ -34,7 +35,7 @@ const deleteTask = async (taskId, user) => {
 };
 
 const getTasks = async (query, user) => {
-  const filter = getQueryFilter(query, ['completed']);
+  const filter = pick(query, ['completed']);
   Object.assign(filter, user.role !== 'admin' ? { owner: user._id } : {});
   const options = getQueryOptions(query);
 
