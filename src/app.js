@@ -31,6 +31,7 @@ app.use(hpp());
 app.use(compression());
 app.use(methodOverride());
 app.use(cors());
+app.options('*', cors());
 
 app.use(passport.initialize());
 passport.use('jwt', jwtStrategy);
