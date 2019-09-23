@@ -17,7 +17,7 @@ const {
   testUnknownQueryFilter,
   testQuerySort,
   testQueryLimit,
-  testQuerySkip,
+  testQueryPage,
   testInvalidParamId,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
@@ -231,6 +231,7 @@ describe('User Route', () => {
     testUnknownQueryFilter(getReqConfig);
     testQuerySort(getReqConfig, '-role', allUsers);
     testQueryLimit(getReqConfig, 1, allUsers);
-    testQuerySkip(getReqConfig, 1, allUsers);
+    testQueryPage(getReqConfig, 1, allUsers.length - 1, allUsers);
+    testQueryPage(getReqConfig, 2, allUsers.length - 1, allUsers);
   });
 });

@@ -45,11 +45,7 @@ const insertUser = async user => {
 };
 
 const insertAllUsers = async () => {
-  await User.insertMany(
-    allUsers.map(user => {
-      return { ...user, password: hashedPassword };
-    })
-  );
+  await User.insertMany(allUsers.map(user => ({ ...user, password: hashedPassword })));
 };
 
 module.exports = {

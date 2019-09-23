@@ -30,7 +30,7 @@ const getUsers = {
     role: Joi.string(),
     sort: Joi.string(),
     limit: Joi.number().integer(),
-    skip: Joi.number().integer(),
+    page: Joi.number().integer(),
   }),
 }
 

@@ -100,7 +100,7 @@ const testQuerySort = (getReqConfig, sort, originalArray) => {
 };
 
 const testQueryLimit = (getReqConfig, limit, originalArray) => {
-  return it('should limit returned elements if limit query param is specified', async () => {
+  return it(`should limit returned elements if limit query param is specified as ${limit}`, async () => {
     const config = getReqConfig();
     config.query = config.query || {};
     config.query.limit = limit;
@@ -111,14 +111,23 @@ const testQueryLimit = (getReqConfig, limit, originalArray) => {
   });
 };
 
-const testQuerySkip = (getReqConfig, skip, originalArray) => {
-  return it('should skip some elements if skip query param is specified', async () => {
+const testQueryPage = (getReqConfig, page, limit, originalArray) => {
+  return it(`should return the correct page if page and limit query params are specified as ${page} and ${limit}`, async () => {
     const config = getReqConfig();
     config.query = config.query || {};
-    config.query.skip = skip;
+    Object.assign(config.query, { page, limit });
     const response = await request(config);
     expect(response.status).to.be.equal(httpStatus.OK);
-    const expectedLength = Math.max(0, originalArray.length - skip);
+    const originalLength = originalArray.length;
+    const skip = (page - 1) * limit;
+    let expectedLength = 0;
+    if (skip < originalLength) {
+      if (skip + limit < originalLength) {
+        expectedLength = limit;
+      } else {
+        expectedLength = originalLength - skip;
+      }
+    }
     expect(response.data).to.have.lengthOf(expectedLength);
   });
 };
@@ -140,6 +149,6 @@ module.exports = {
   testUnknownQueryFilter,
   testQuerySort,
   testQueryLimit,
-  testQuerySkip,
+  testQueryPage,
   testInvalidParamId,
 };

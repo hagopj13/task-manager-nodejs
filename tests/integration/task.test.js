@@ -12,7 +12,7 @@ const {
   testUnknownQueryFilter,
   testQuerySort,
   testQueryLimit,
-  testQuerySkip,
+  testQueryPage,
   testInvalidParamId,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
@@ -143,7 +143,8 @@ describe('Task Route', () => {
     testUnknownQueryFilter(getReqConfig);
     testQuerySort(getReqConfig, '-completed', userOneTasks);
     testQueryLimit(getReqConfig, 1, userOneTasks);
-    testQuerySkip(getReqConfig, 1, userOneTasks);
+    testQueryPage(getReqConfig, 1, userOneTasks.length - 1, userOneTasks);
+    testQueryPage(getReqConfig, 2, userOneTasks.length - 1, userOneTasks);
 
     it('should allow admins to retrieve all the tasks of all users', async () => {
       accessToken = adminAccessToken;
