@@ -17,6 +17,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --check **/*.js",
     "format:fix": "prettier --write **/*.js",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up",
     "docker:dev": "docker-compose -f docker-compose.dev.yml up"
   },
   "repository": {
