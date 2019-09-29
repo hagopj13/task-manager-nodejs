@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check **/*.js",
-    "format:fix": "prettier --write **/*.js"
+    "format:fix": "prettier --write **/*.js",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up"
   },
   "repository": {
     "type": "git",
@@ -62,7 +63,7 @@
     "chai": "^4.2.0",
     "codacy-coverage": "^3.4.0",
     "env-cmd": "^10.0.1",
-    "eslint": "^6.4.0",
+    "eslint": "^6.5.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.3.0",
     "eslint-plugin-chai-friendly": "^0.4.1",
@@ -70,11 +71,11 @@
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-security": "^1.4.0",
-    "husky": "^3.0.5",
-    "lint-staged": "^9.3.0",
+    "husky": "^3.0.7",
+    "lint-staged": "^9.4.0",
     "mocha": "^6.2.0",
     "node-mocks-http": "^1.8.0",
-    "nodemon": "^1.19.2",
+    "nodemon": "^1.19.3",
     "nyc": "^14.1.1",
     "rewire": "^4.0.1",
     "sinon": "^7.5.0"
