@@ -9,10 +9,10 @@ const methodOverride = require('method-override');
 const passport = require('passport');
 const { jwtStrategy } = require('./config/passport');
 const { authLimiter } = require('./middlewares/rateLimiter');
-require('./db/mongoose');
 const { successResponseMorgan, errorResponseMorgan } = require('./config/morgan');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler, notFoundError } = require('./middlewares/error');
+require('./config/mongoose');
 
 const app = express();
 

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const { mongodbUrl } = require('../config/config');
-const logger = require('../config/logger');
+const { mongodbUrl } = require('./config');
+const logger = require('./logger');
 
 mongoose
   .connect(mongodbUrl, {
