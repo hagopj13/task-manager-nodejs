@@ -1,25 +1,7 @@
 version: '3'
 services:
   nodejs:
-    build: .
-    image: api
     container_name: api-dev
-    ports:
-      - '3000:3000'
-    depends_on:
-      - mongodb
     environment:
       - MONDODB_URL=mongodb://mongodb:27017/task-manager-api-2
-    volumes:
-      - .:/api
     command: yarn dev -L
-
-  mongodb:
-    image: mongo:4.2.0-bionic
-    ports:
-      - '27017:27017'
-    volumes:
-      - dbdata:/data/db
-
-volumes:
-  dbdata:

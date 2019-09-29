@@ -1,0 +1,29 @@
+version: '3'
+services:
+  nodejs:
+    build: .
+    image: api
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/api
+    networks:
+      - node-network
+
+  mongodb:
+    image: mongo:4.2.0-bionic
+    ports:
+      - '27017:27017'
+    volumes:
+      - dbdata:/data/db
+    networks:
+      - node-network
+
+volumes:
+  dbdata:
+
+networks:
+  node-network:
+    driver: bridge
