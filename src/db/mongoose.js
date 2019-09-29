@@ -8,4 +8,7 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .catch(error => logger.error(error.message));
+  .catch(error => {
+    logger.error(error.message);
+    process.exit(1);
+  });
