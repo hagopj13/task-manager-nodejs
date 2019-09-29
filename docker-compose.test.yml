@@ -1,0 +1,7 @@
+version: '3'
+services:
+  nodejs:
+    container_name: api-test
+    environment:
+      - MONDODB_URL=mongodb://mongodb:27017/task-manager-api-test-2
+    command: yarn test
