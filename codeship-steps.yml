@@ -1,4 +1,4 @@
-- type: serial
+- type: parallel
   name: validate_build_step
   steps:
     - name: lint
