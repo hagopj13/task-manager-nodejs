@@ -2,10 +2,10 @@ api_codeship:
   build: .
   depends_on:
     - mongodb
-  encrypted_env_file:
-    - .env.encrypted
   environment:
     - MONDODB_TEST_URL=mongodb://mongodb:27017/task-manager-api-test-2
+  encrypted_env_file:
+    - .env.encrypted
 
 mongodb:
   image: mongo:4.2.0-bionic
