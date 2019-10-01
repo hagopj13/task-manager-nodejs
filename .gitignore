@@ -13,3 +13,5 @@ logs
 # exclude coverage files
 .nyc_output
 coverage
+
+codeship.aes
