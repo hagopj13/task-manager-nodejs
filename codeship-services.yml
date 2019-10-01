@@ -1,0 +1,11 @@
+api_codeship:
+  build: .
+  depends_on:
+    - mongodb
+  environment:
+    - MONDODB_TEST_URL=mongodb://mongodb:27017/task-manager-api-test-2
+
+mongodb:
+  image: mongo:4.2.0-bionic
+  ports:
+    - '27017:27017'

@@ -1,0 +1,9 @@
+- type: parallel
+  name: validate_build_step
+  steps:
+    - name: lint
+      service: api_codeship
+      command: yarn lint
+    - name: tests
+      service: api_codeship
+      command: yarn test
