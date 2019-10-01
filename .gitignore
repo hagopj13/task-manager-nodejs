@@ -6,6 +6,7 @@ node_modules
 
 # include example environment variables
 !.env*.example
+!.env*.encrypted
 
 # exclude logs
 logs
