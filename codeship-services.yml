@@ -3,7 +3,7 @@ api_codeship:
   depends_on:
     - mongodb
   environment:
-    - MONDODB_URL=mongodb://mongodb:27017/task-manager-api-test-2
+    - ENFORCED_MONDODB_URL=mongodb://mongodb:27017/task-manager-api-test-2
   encrypted_env_file:
     - .env.encrypted
 

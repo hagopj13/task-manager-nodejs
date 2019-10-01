@@ -3,5 +3,5 @@ services:
   nodejs:
     container_name: api-prod
     environment:
-      - MONDODB_URL=mongodb://mongodb:27017/task-manager-api-2
+      - ENFORCED_MONDODB_URL=mongodb://mongodb:27017/task-manager-api-2
     command: yarn start

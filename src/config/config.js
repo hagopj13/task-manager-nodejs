@@ -6,12 +6,10 @@ dotenv.config({
 });
 
 const getMongodbUrl = () => {
-  if (process.env.MONDODB_URL) {
-    return process.env.MONDODB_URL;
+  if (process.env.ENFORCED_MONDODB_URL) {
+    return process.env.ENFORCED_MONDODB_URL;
   }
-  return process.env.NODE_ENV === 'test'
-    ? process.env.DEFAULT_MONDODB_TEST_URL
-    : process.env.DEFAULT_MONDODB_URL;
+  return process.env.NODE_ENV === 'test' ? process.env.MONDODB_TEST_URL : process.env.MONDODB_URL;
 };
 
 const envirnomentVariables = {
