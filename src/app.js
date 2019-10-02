@@ -7,13 +7,15 @@ const compression = require('compression');
 const cors = require('cors');
 const methodOverride = require('method-override');
 const passport = require('passport');
+const { env } = require('./config/config');
+const { connectDb } = require('./config/mongoose');
 const { jwtStrategy } = require('./config/passport');
-const { authLimiter } = require('./middlewares/rateLimiter');
 const { successResponseMorgan, errorResponseMorgan } = require('./config/morgan');
+const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler, notFoundError } = require('./middlewares/error');
-const { env } = require('./config/config');
-require('./config/mongoose');
+
+connectDb();
 
 const app = express();
 
