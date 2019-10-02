@@ -1,4 +1,4 @@
-api_codeship:
+api-codeship:
   build: .
   depends_on:
     - mongodb

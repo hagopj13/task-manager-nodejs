@@ -2,12 +2,12 @@
   name: validate_build_step
   steps:
     - name: lint
-      service: api_codeship
+      service: api-codeship
       command: yarn lint
     - name: tests
-      service: api_codeship
+      service: api-codeship
       command: yarn test
 - name: deploy_step
   tag: master
-  service: codeship_heroku_deployment
+  service: codeship-heroku-deployment
   command: codeship_heroku deploy /deploy task-manager-api-hj
