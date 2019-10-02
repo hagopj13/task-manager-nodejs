@@ -12,12 +12,15 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const { successResponseMorgan, errorResponseMorgan } = require('./config/morgan');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler, notFoundError } = require('./middlewares/error');
+const { env } = require('./config/config');
 require('./config/mongoose');
 
 const app = express();
 
-app.use(successResponseMorgan);
-app.use(errorResponseMorgan);
+if (env !== 'test') {
+  app.use(successResponseMorgan);
+  app.use(errorResponseMorgan);
+}
 
 app.use(helmet());
 
