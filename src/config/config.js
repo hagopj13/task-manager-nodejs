@@ -6,8 +6,8 @@ dotenv.config({
 });
 
 const getMongodbUrl = () => {
-  if (process.env.ENFORCED_MONDODB_URL) {
-    return process.env.ENFORCED_MONDODB_URL;
+  if (process.env.DOCKER_MONGODB_URL) {
+    return process.env.DOCKER_MONGODB_URL;
   }
   return process.env.NODE_ENV === 'test' ? process.env.MONDODB_TEST_URL : process.env.MONDODB_URL;
 };
