@@ -11,3 +11,10 @@ mongodb:
   image: mongo:4.2.0-bionic
   ports:
     - '27017:27017'
+
+codeship-heroku-deployment:
+  image: codeship/heroku-deployment
+  encrypted_env_file:
+    - .env.encrypted
+  volumes:
+    - ./:/deploy
