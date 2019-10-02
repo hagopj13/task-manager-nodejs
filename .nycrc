@@ -1,6 +1,7 @@
 {
   "exclude": [
     "src/config",
-    "tests"
+    "tests",
+    "src/app.js"
   ]
 }
