@@ -7,11 +7,11 @@
     - name: tests
       service: api-codeship
       command: yarn test
+- name: code_quality_step
+  tag: master
+  service: api-codeship
+  command: ls
 - name: deploy_step
   tag: master
   service: codeship-heroku-deployment
   command: codeship_heroku deploy /deploy task-manager-api-hj
-- name: code_quality_step
-  tag: master
-  service: api-codeship
-  command: yarn report
