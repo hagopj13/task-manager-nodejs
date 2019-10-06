@@ -14,4 +14,4 @@
 - name: code_quality_step
   tag: master
   service: api-codeship
-  command: pwd && yarn report
+  command: yarn report
