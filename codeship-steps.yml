@@ -1,3 +1,16 @@
+- type: serial
+  name: validate_build_step
+  steps:
+    - name: lint
+      service: api-codeship
+      command: yarn lint
+    - name: tests
+      service: api-codeship
+      command: yarn test
+- name: deploy_step
+  tag: master
+  service: codeship-heroku-deployment
+  command: codeship_heroku deploy /deploy task-manager-api-hj
 - name: code_quality_step
   tag: master
   service: api-codeship
