@@ -24,8 +24,6 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
 
 const auth = (...requiredRights) => async (req, res, next) => {
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line
-    // prettier-ignore
     passport.authenticate(
       'jwt',
       { session: false },
