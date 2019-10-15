@@ -1,7 +1,7 @@
 const moment = require('moment');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const { RefreshToken } = require('../../src/models');
-const { generateToken } = require('../../src/utils/auth.util');
+const { generateToken } = require('../../src/utils/token.util');
 const { userOne } = require('./user.fixture');
 
 const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');

@@ -4,7 +4,7 @@ const httpStatus = require('http-status');
 const { AppError } = require('../utils/error.util');
 const { jwt: jwtConfig } = require('../config/config');
 const { User } = require('../models');
-const { generateToken } = require('../utils/auth.util');
+const { generateToken } = require('../utils/token.util');
 const { RefreshToken } = require('../models');
 
 const unauthorizedError = new AppError(httpStatus.UNAUTHORIZED, 'Please authenticate');
