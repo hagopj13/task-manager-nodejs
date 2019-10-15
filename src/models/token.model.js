@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { pick } = require('lodash');
 
-const refreshTokenSchema = mongoose.Schema(
+const tokenSchema = mongoose.Schema(
   {
     token: {
       type: String,
@@ -11,6 +11,11 @@ const refreshTokenSchema = mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ['refresh', 'resetPassword'],
       required: true,
     },
     expires: {
@@ -29,11 +34,11 @@ const refreshTokenSchema = mongoose.Schema(
   }
 );
 
-refreshTokenSchema.methods.transform = function() {
-  const refreshToken = this;
-  return pick(refreshToken.toJSON(), ['token', 'expires']);
+tokenSchema.methods.transform = function() {
+  const token = this;
+  return pick(token.toJSON(), ['token', 'expires']);
 };
 
-const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
+const Token = mongoose.model('Token', tokenSchema);
 
-module.exports = RefreshToken;
+module.exports = Token;

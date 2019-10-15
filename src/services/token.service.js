@@ -3,11 +3,38 @@ const moment = require('moment');
 const httpStatus = require('http-status');
 const { AppError } = require('../utils/error.util');
 const { jwt: jwtConfig } = require('../config/config');
-const { User } = require('../models');
+const { getUser } = require('../services/user.service');
 const { generateToken } = require('../utils/token.util');
-const { RefreshToken } = require('../models');
+const { Token } = require('../models');
 
-const unauthorizedError = new AppError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+const createToken = async (token, userId, type, expires) => {
+  const tokenDoc = await Token.create({
+    token,
+    type,
+    user: userId,
+    expires: expires.toDate(),
+  });
+  return tokenDoc;
+};
+
+const verifyToken = async (token, type) => {
+  const payload = jwt.verify(token, jwtConfig.secret);
+  const tokenDoc = await Token.findOne({
+    token,
+    type,
+    user: payload.sub,
+    blacklisted: false,
+  });
+
+  if (!tokenDoc) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Token not found');
+  }
+  if (moment(tokenDoc.expires).isBefore()) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Token is expired');
+  }
+
+  return tokenDoc;
+};
 
 const generateAccessToken = user => {
   const expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
@@ -18,12 +45,8 @@ const generateAccessToken = user => {
 const generateRefreshToken = async user => {
   const expires = moment().add(jwtConfig.refreshExpirationDays, 'days');
   const token = generateToken(user._id, expires);
-  const refreshToken = await RefreshToken.create({
-    token,
-    user: user._id,
-    expires: expires.toDate(),
-  });
-  return refreshToken.transform();
+  const refreshTokenDoc = await createToken(token, user._id, 'refresh', expires);
+  return refreshTokenDoc.transform();
 };
 
 const generateAuthTokens = async user => {
@@ -32,39 +55,24 @@ const generateAuthTokens = async user => {
   return { accessToken, refreshToken };
 };
 
-const verifyRefreshToken = async token => {
+const unauthorizedError = new AppError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+const verifyRefreshToken = async refreshToken => {
   try {
-    const payload = jwt.verify(token, jwtConfig.secret);
-    const refreshToken = await RefreshToken.findOneAndDelete({
-      token,
-      user: payload.sub,
-      blacklisted: false,
-    });
-    if (!refreshToken || moment(refreshToken.expires).isBefore()) {
-      throw unauthorizedError;
-    }
-    return refreshToken;
+    const refreshTokenDoc = await verifyToken(refreshToken, 'refresh');
+    await refreshTokenDoc.remove();
+    const user = await getUser(refreshTokenDoc.user);
+    return user;
   } catch (error) {
     throw unauthorizedError;
   }
 };
 
-const verifyAndGenerateAuthTokens = async token => {
-  const refreshToken = await verifyRefreshToken(token);
-  const user = await User.findById(refreshToken.user);
-  if (!user) {
-    throw unauthorizedError;
-  }
-  const newAuthTokens = await generateAuthTokens(user);
-  return newAuthTokens;
-};
-
 const deleteAllRefreshTokensOfUser = async user => {
-  await RefreshToken.deleteMany({ user: user._id });
+  await Token.deleteMany({ user: user._id, type: 'refresh' });
 };
 
 module.exports = {
   generateAuthTokens,
-  verifyAndGenerateAuthTokens,
+  verifyRefreshToken,
   deleteAllRefreshTokensOfUser,
 };

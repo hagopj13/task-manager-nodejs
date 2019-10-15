@@ -16,7 +16,7 @@ const login = {
   }),
 };
 
-const refreshToken = {
+const refreshTokens = {
   body: Joi.object().keys({
     refreshToken: Joi.string().required(),
   }),
@@ -25,5 +25,5 @@ const refreshToken = {
 module.exports = {
   register,
   login,
-  refreshToken,
+  refreshTokens,
 };

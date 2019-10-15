@@ -22,8 +22,9 @@ const login = catchAsync(async (req, res) => {
   res.send(response);
 });
 
-const refreshToken = catchAsync(async (req, res) => {
-  const tokens = await tokenService.verifyAndGenerateAuthTokens(req.body.refreshToken);
+const refreshTokens = catchAsync(async (req, res) => {
+  const user = await tokenService.verifyRefreshToken(req.body.refreshToken);
+  const tokens = await tokenService.generateAuthTokens(user);
   const response = { ...tokens };
   res.send(response);
 });
@@ -36,6 +37,6 @@ const logoutAll = catchAsync(async (req, res) => {
 module.exports = {
   register,
   login,
-  refreshToken,
+  refreshTokens,
   logoutAll,
 };

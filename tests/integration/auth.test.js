@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const moment = require('moment');
 const { omit, set } = require('lodash');
 const request = require('../utils/testRequest');
-const { User, RefreshToken } = require('../../src/models');
+const { User, Token } = require('../../src/models');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
 const { generateToken } = require('../../src/utils/token.util');
@@ -21,14 +21,14 @@ const {
   adminAccessToken,
   insertAllUsers,
 } = require('../fixtures/user.fixture');
-const { userOneRefreshToken, insertRefreshToken } = require('../fixtures/refreshToken.fixture');
+const { userOneRefreshToken, insertToken } = require('../fixtures/token.fixture');
 
 describe('Auth Route', () => {
   let reqBody;
   beforeEach(async () => {
     await clearDatabase();
     await insertAllUsers();
-    await insertRefreshToken(userOneRefreshToken);
+    await insertToken(userOneRefreshToken);
   });
 
   describe('POST /v1/auth/register', () => {
@@ -150,7 +150,7 @@ describe('Auth Route', () => {
     });
   });
 
-  describe('POST /v1/auth/refreshToken', () => {
+  describe('POST /v1/auth/refreshTokens', () => {
     let userId;
     let refreshTokenExpires;
     let blacklisted;
@@ -165,7 +165,7 @@ describe('Auth Route', () => {
     const getReqConfig = () => {
       return {
         method: 'POST',
-        url: '/v1/auth/refreshToken',
+        url: '/v1/auth/refreshTokens',
         body: reqBody,
       };
     };
@@ -175,7 +175,7 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       checkResponseTokens(response.data);
 
-      const dbRefreshToken = await RefreshToken.findOne({
+      const dbRefreshToken = await Token.findOne({
         token: response.data.refreshToken.token,
       });
       expect(dbRefreshToken).to.be.ok;
@@ -185,7 +185,7 @@ describe('Auth Route', () => {
 
     it('should delete the old refresh token after creating a new one', async () => {
       await request(getReqConfig());
-      const oldRefreshToken = await RefreshToken.findOne({ token: userOneRefreshToken.token });
+      const oldRefreshToken = await Token.findOne({ token: userOneRefreshToken.token });
       expect(oldRefreshToken).not.to.be.ok;
     });
 
@@ -212,10 +212,11 @@ describe('Auth Route', () => {
       const refreshToken = {
         token: reqBody.refreshToken,
         user: userId,
+        type: 'refresh',
         expires: refreshTokenExpires,
         blacklisted,
       };
-      await insertRefreshToken(refreshToken);
+      await insertToken(refreshToken);
     };
 
     it('should return a 401 error if the refresh token is blacklisted', async () => {
@@ -259,7 +260,10 @@ describe('Auth Route', () => {
       const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
-      const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOne._id });
+      const dbRefreshTokenCount = await Token.countDocuments({
+        user: userOne._id,
+        type: 'refresh',
+      });
       expect(dbRefreshTokenCount).to.be.equal(0);
     });
 
