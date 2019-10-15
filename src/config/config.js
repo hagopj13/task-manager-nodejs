@@ -21,6 +21,12 @@ const envirnomentVariables = {
     accessExpirationMinutes: process.env.JWT_ACCESS_EXPIRATION_MINUTES,
     refreshExpirationDays: process.env.JWT_REFRESH_EXPIRATION_DAYS,
   },
+  email: {
+    username: process.env.EMAIL_USERNAME,
+    password: process.env.EMAIL_PASSWORD,
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+  },
 };
 
 module.exports = envirnomentVariables;
