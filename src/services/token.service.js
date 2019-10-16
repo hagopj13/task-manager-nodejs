@@ -29,9 +29,6 @@ const verifyToken = async (token, type) => {
   if (!tokenDoc) {
     throw new AppError(httpStatus.NOT_FOUND, 'Token not found');
   }
-  if (moment(tokenDoc.expires).isBefore()) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Token is expired');
-  }
 
   return tokenDoc;
 };

@@ -213,7 +213,7 @@ describe('Auth Route', () => {
         token: reqBody.refreshToken,
         user: userId,
         type: 'refresh',
-        expires: refreshTokenExpires,
+        expires: refreshTokenExpires.toDate(),
         blacklisted,
       };
       await insertToken(refreshToken);
