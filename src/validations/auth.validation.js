@@ -22,8 +22,18 @@ const refreshTokens = {
   }),
 };
 
+const resetPassword = {
+  params: Joi.object().keys({
+    resetPasswordToken: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    password: Joi.string().min(8).regex(/^((?!password).)*$/im).required(),
+  }),
+}
+
 module.exports = {
   register,
   login,
   refreshTokens,
+  resetPassword,
 };

@@ -29,6 +29,11 @@ const refreshTokens = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const logoutAll = catchAsync(async (req, res) => {
+  await tokenService.deleteAllRefreshTokensOfUser(req.user._id);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 const resetPassword = catchAsync(async (req, res) => {
   const resetPasswordTokenDoc = await tokenService.verifyResetPasswordToken(
     req.params.resetPasswordToken
@@ -36,11 +41,6 @@ const resetPassword = catchAsync(async (req, res) => {
   await userService.updateUser(resetPasswordTokenDoc.user, { password: req.body.password });
   await resetPasswordTokenDoc.remove();
   await tokenService.deleteAllRefreshTokensOfUser(resetPasswordTokenDoc.user);
-  res.status(httpStatus.NO_CONTENT).send();
-});
-
-const logoutAll = catchAsync(async (req, res) => {
-  await tokenService.deleteAllRefreshTokensOfUser(req.user._id);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
