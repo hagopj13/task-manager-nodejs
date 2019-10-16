@@ -14,7 +14,7 @@ const generateToken = (userId, expires, secret = jwtConfig.secret) => {
   return jwt.sign(payload, secret);
 };
 
-const createToken = async (token, userId, expires, type) => {
+const saveToken = async (token, userId, expires, type) => {
   const tokenDoc = await Token.create({
     token,
     user: userId,
@@ -42,6 +42,6 @@ const verifyToken = async (token, type) => {
 
 module.exports = {
   generateToken,
-  createToken,
+  saveToken,
   verifyToken,
 };

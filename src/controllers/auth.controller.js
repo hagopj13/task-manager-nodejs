@@ -23,7 +23,7 @@ const login = catchAsync(async (req, res) => {
 });
 
 const refreshTokens = catchAsync(async (req, res) => {
-  const tokens = await authService.refreshTokens(req.body.refreshToken);
+  const tokens = await authService.refreshAuthTokens(req.body.refreshToken);
   const response = { ...tokens };
   res.send(response);
 });

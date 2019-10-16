@@ -10,7 +10,7 @@ const { AppError } = require('../utils/error.util');
 const checkPassword = async (password, correctPassword) => {
   const isPasswordMatch = await bcrypt.compare(password, correctPassword);
   if (!isPasswordMatch) {
-    throw new Error('Passwords do not match');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Passwords do not match');
   }
 };
 
@@ -30,7 +30,7 @@ const generateAuthTokens = async userId => {
 
   const refreshTokenExpires = moment().add(jwtConfig.refreshExpirationDays, 'days');
   const refreshToken = tokenService.generateToken(userId, refreshTokenExpires);
-  await tokenService.createToken(refreshToken, userId, refreshTokenExpires, 'refresh');
+  await tokenService.saveToken(refreshToken, userId, refreshTokenExpires, 'refresh');
 
   return {
     accessToken: {
@@ -44,7 +44,7 @@ const generateAuthTokens = async userId => {
   };
 };
 
-const refreshTokens = async refreshToken => {
+const refreshAuthTokens = async refreshToken => {
   try {
     const refreshTokenDoc = await tokenService.verifyToken(refreshToken, 'refresh');
     const userId = refreshTokenDoc.user;
@@ -67,9 +67,10 @@ const deleteUserResetPasswordTokens = async userId => {
 
 const forgotPassword = async email => {
   const user = userService.getUserByEmail(email);
+  await deleteUserResetPasswordTokens(user._id);
   const expires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
   const resetPasswordToken = tokenService.generateToken(user._id, expires);
-  await tokenService.createToken(resetPasswordToken, user._id, expires, 'resetPassword');
+  await tokenService.saveToken(resetPasswordToken, user._id, expires, 'resetPassword');
 };
 
 const resetPassword = async (resetPasswordToken, newPassword) => {
@@ -88,7 +89,7 @@ const resetPassword = async (resetPasswordToken, newPassword) => {
 module.exports = {
   loginUser,
   generateAuthTokens,
-  refreshTokens,
+  refreshAuthTokens,
   deleteUserRefreshTokens,
   forgotPassword,
   resetPassword,

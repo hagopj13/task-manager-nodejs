@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { pick } = require('lodash');
 
 const tokenSchema = mongoose.Schema(
   {
@@ -33,11 +32,6 @@ const tokenSchema = mongoose.Schema(
     toJSON: { getters: true },
   }
 );
-
-tokenSchema.methods.transform = function() {
-  const token = this;
-  return pick(token.toJSON(), ['token', 'expires']);
-};
 
 const Token = mongoose.model('Token', tokenSchema);
 
