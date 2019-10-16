@@ -17,6 +17,10 @@ const createToken = async (token, userId, type, expires) => {
   return tokenDoc;
 };
 
+const deleteToken = async token => {
+  await Token.deleteOne({ token });
+};
+
 const verifyToken = async (token, type) => {
   const payload = jwt.verify(token, jwtConfig.secret);
   const tokenDoc = await Token.findOne({
@@ -52,15 +56,33 @@ const generateAuthTokens = async user => {
   return { accessToken, refreshToken };
 };
 
+const generateResetPasswordToken = async user => {
+  const expires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
+  const token = generateToken(user._id, expires);
+  await createToken(token, user._id, 'resetPassword', expires);
+  return token;
+};
+
 const unauthorizedError = new AppError(httpStatus.UNAUTHORIZED, 'Please authenticate');
 const verifyRefreshToken = async refreshToken => {
   try {
     const refreshTokenDoc = await verifyToken(refreshToken, 'refresh');
-    await refreshTokenDoc.remove();
+    await deleteToken(refreshToken);
     const user = await getUser(refreshTokenDoc.user);
     return user;
   } catch (error) {
     throw unauthorizedError;
+  }
+};
+
+const resetPasswordTokenError = new AppError(httpStatus.BAD_REQUEST, 'Invalid token');
+const verifyResetPasswordToken = async resetPasswordToken => {
+  try {
+    const resetPasswordTokenDoc = await verifyToken(resetPasswordToken, 'resetPassword');
+    const user = await getUser(resetPasswordTokenDoc.user);
+    return user;
+  } catch (error) {
+    throw resetPasswordTokenError;
   }
 };
 
@@ -69,7 +91,10 @@ const deleteAllRefreshTokensOfUser = async user => {
 };
 
 module.exports = {
+  deleteToken,
   generateAuthTokens,
   verifyRefreshToken,
+  verifyResetPasswordToken,
   deleteAllRefreshTokensOfUser,
+  generateResetPasswordToken,
 };
