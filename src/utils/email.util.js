@@ -3,9 +3,9 @@ const { email } = require('../config/config');
 
 sendGridMail.setApiKey(email.sendgridApiKey);
 
-const sendEmail = ({ to, subject, text }) => {
+const sendEmail = async ({ to, subject, text }) => {
   const msg = { from: email.fromEmail, to, subject, text };
-  sendGridMail.send(msg);
+  await sendGridMail.send(msg);
 };
 
 module.exports = {
