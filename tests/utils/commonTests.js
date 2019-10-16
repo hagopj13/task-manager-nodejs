@@ -1,11 +1,7 @@
 const { expect } = require('chai');
 const httpStatus = require('http-status');
 const request = require('./testRequest');
-const {
-  checkUnauthorizedError,
-  checkValidationError,
-  checkForbiddenError,
-} = require('./checkError');
+const { checkUnauthorizedError, checkValidationError, checkForbiddenError } = require('./checkError');
 const { userOneAccessToken, adminAccessToken } = require('../fixtures/user.fixture');
 
 const testMissingAccessToken = getReqConfig => {

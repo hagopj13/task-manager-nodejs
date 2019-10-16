@@ -35,9 +35,7 @@ const logoutAll = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const resetPasswordTokenDoc = await tokenService.verifyResetPasswordToken(
-    req.params.resetPasswordToken
-  );
+  const resetPasswordTokenDoc = await tokenService.verifyResetPasswordToken(req.params.resetPasswordToken);
   await userService.updateUser(resetPasswordTokenDoc.user, { password: req.body.password });
   await resetPasswordTokenDoc.remove();
   await tokenService.deleteAllRefreshTokensOfUser(resetPasswordTokenDoc.user);

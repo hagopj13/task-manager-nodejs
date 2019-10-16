@@ -15,12 +15,7 @@ const { checkValidationError, checkUnauthorizedError } = require('../utils/check
 const { checkResponseTokens, checkResponseUser } = require('../utils/checkResponse');
 const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
-const {
-  userOne,
-  userOneAccessToken,
-  adminAccessToken,
-  insertAllUsers,
-} = require('../fixtures/user.fixture');
+const { userOne, userOneAccessToken, adminAccessToken, insertAllUsers } = require('../fixtures/user.fixture');
 const { userOneRefreshToken, insertToken } = require('../fixtures/token.fixture');
 
 describe('Auth Route', () => {
@@ -189,9 +184,7 @@ describe('Auth Route', () => {
       expect(oldRefreshToken).not.to.be.ok;
     });
 
-    const bodyValidationTestCases = [
-      { body: omit(reqBody, 'refreshToken'), message: 'refreshToken is missing' },
-    ];
+    const bodyValidationTestCases = [{ body: omit(reqBody, 'refreshToken'), message: 'refreshToken is missing' }];
     testBodyValidation(getReqConfig, bodyValidationTestCases);
 
     it('should return a 401 error if the refresh token is signed by an invalid secret', async () => {
