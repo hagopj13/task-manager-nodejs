@@ -30,10 +30,11 @@ const refreshTokens = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const { resetPasswordToken } = req.params;
-  const resetPasswordTokenDoc = await tokenService.verifyResetPasswordToken(resetPasswordToken);
+  const resetPasswordTokenDoc = await tokenService.verifyResetPasswordToken(
+    req.params.resetPasswordToken
+  );
   await userService.updateUser(resetPasswordTokenDoc.user, { password: req.body.password });
-  await tokenService.deleteToken(resetPasswordToken);
+  await resetPasswordTokenDoc.remove();
   await tokenService.deleteAllRefreshTokensOfUser(resetPasswordTokenDoc.user);
   res.status(httpStatus.NO_CONTENT).send();
 });

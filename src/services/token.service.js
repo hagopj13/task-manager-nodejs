@@ -17,10 +17,6 @@ const createToken = async (token, userId, type, expires) => {
   return tokenDoc;
 };
 
-const deleteToken = async token => {
-  await Token.deleteOne({ token });
-};
-
 const verifyToken = async (token, type) => {
   const payload = jwt.verify(token, jwtConfig.secret);
   const tokenDoc = await Token.findOne({
@@ -67,7 +63,7 @@ const unauthorizedError = new AppError(httpStatus.UNAUTHORIZED, 'Please authenti
 const verifyRefreshToken = async refreshToken => {
   try {
     const refreshTokenDoc = await verifyToken(refreshToken, 'refresh');
-    await deleteToken(refreshToken);
+    await refreshTokenDoc.remove();
     await getUser(refreshTokenDoc.user);
     return refreshTokenDoc;
   } catch (error) {
@@ -91,7 +87,6 @@ const deleteAllRefreshTokensOfUser = async userId => {
 };
 
 module.exports = {
-  deleteToken,
   generateAuthTokens,
   verifyRefreshToken,
   verifyResetPasswordToken,
