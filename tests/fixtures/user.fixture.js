@@ -3,7 +3,7 @@ const moment = require('moment');
 const bcrypt = require('bcryptjs');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const { User } = require('../../src/models');
-const { generateToken } = require('../../src/utils/token.util');
+const { generateToken } = require('../../src/services/token.service');
 
 const accessTokenExpires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
 

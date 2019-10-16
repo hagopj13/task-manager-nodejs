@@ -1,10 +1,10 @@
 const httpStatus = require('http-status');
-const { userService, tokenService } = require('../services');
+const { userService, authService } = require('../services');
 const { catchAsync } = require('../utils/controller.util');
 
 const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
-  const tokens = await tokenService.generateAuthTokens(user._id);
+  const tokens = await authService.generateAuthTokens(user._id);
   const response = {
     user: user.transform(),
     tokens,
@@ -13,8 +13,8 @@ const register = catchAsync(async (req, res) => {
 });
 
 const login = catchAsync(async (req, res) => {
-  const user = await userService.loginUser(req.body.email, req.body.password);
-  const tokens = await tokenService.generateAuthTokens(user._id);
+  const user = await authService.loginUser(req.body.email, req.body.password);
+  const tokens = await authService.generateAuthTokens(user._id);
   const response = {
     user: user.transform(),
     tokens,
@@ -23,22 +23,23 @@ const login = catchAsync(async (req, res) => {
 });
 
 const refreshTokens = catchAsync(async (req, res) => {
-  const refreshTokenDoc = await tokenService.verifyRefreshToken(req.body.refreshToken);
-  const tokens = await tokenService.generateAuthTokens(refreshTokenDoc.user);
+  const tokens = await authService.refreshTokens(req.body.refreshToken);
   const response = { ...tokens };
   res.send(response);
 });
 
 const logoutAll = catchAsync(async (req, res) => {
-  await tokenService.deleteAllRefreshTokensOfUser(req.user._id);
+  await authService.deleteUserRefreshTokens(req.user._id);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const forgotPassword = catchAsync(async (req, res) => {
+  await authService.forgotPassword(req.body.email);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const resetPasswordTokenDoc = await tokenService.verifyResetPasswordToken(req.params.resetPasswordToken);
-  await userService.updateUser(resetPasswordTokenDoc.user, { password: req.body.password });
-  await resetPasswordTokenDoc.remove();
-  await tokenService.deleteAllRefreshTokensOfUser(resetPasswordTokenDoc.user);
+  await authService.resetPassword(req.params.resetPasswordToken, req.body.password);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
@@ -47,5 +48,6 @@ module.exports = {
   login,
   refreshTokens,
   logoutAll,
+  forgotPassword,
   resetPassword,
 };
