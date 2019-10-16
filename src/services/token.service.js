@@ -37,29 +37,29 @@ const verifyToken = async (token, type) => {
   return tokenDoc;
 };
 
-const generateAccessToken = user => {
+const generateAccessToken = userId => {
   const expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
-  const token = generateToken(user._id, expires);
+  const token = generateToken(userId, expires);
   return { token, expires: expires.toDate() };
 };
 
-const generateRefreshToken = async user => {
+const generateRefreshToken = async userId => {
   const expires = moment().add(jwtConfig.refreshExpirationDays, 'days');
-  const token = generateToken(user._id, expires);
-  const refreshTokenDoc = await createToken(token, user._id, 'refresh', expires);
+  const token = generateToken(userId, expires);
+  const refreshTokenDoc = await createToken(token, userId, 'refresh', expires);
   return refreshTokenDoc.transform();
 };
 
-const generateAuthTokens = async user => {
-  const accessToken = generateAccessToken(user);
-  const refreshToken = await generateRefreshToken(user);
+const generateAuthTokens = async userId => {
+  const accessToken = generateAccessToken(userId);
+  const refreshToken = await generateRefreshToken(userId);
   return { accessToken, refreshToken };
 };
 
-const generateResetPasswordToken = async user => {
+const generateResetPasswordToken = async userId => {
   const expires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
-  const token = generateToken(user._id, expires);
-  await createToken(token, user._id, 'resetPassword', expires);
+  const token = generateToken(userId, expires);
+  await createToken(token, userId, 'resetPassword', expires);
   return token;
 };
 
@@ -68,8 +68,8 @@ const verifyRefreshToken = async refreshToken => {
   try {
     const refreshTokenDoc = await verifyToken(refreshToken, 'refresh');
     await deleteToken(refreshToken);
-    const user = await getUser(refreshTokenDoc.user);
-    return user;
+    await getUser(refreshTokenDoc.user);
+    return refreshTokenDoc;
   } catch (error) {
     throw unauthorizedError;
   }
@@ -79,15 +79,15 @@ const resetPasswordTokenError = new AppError(httpStatus.BAD_REQUEST, 'Invalid to
 const verifyResetPasswordToken = async resetPasswordToken => {
   try {
     const resetPasswordTokenDoc = await verifyToken(resetPasswordToken, 'resetPassword');
-    const user = await getUser(resetPasswordTokenDoc.user);
-    return user;
+    await getUser(resetPasswordTokenDoc.user);
+    return resetPasswordTokenDoc;
   } catch (error) {
     throw resetPasswordTokenError;
   }
 };
 
-const deleteAllRefreshTokensOfUser = async user => {
-  await Token.deleteMany({ user: user._id, type: 'refresh' });
+const deleteAllRefreshTokensOfUser = async userId => {
+  await Token.deleteMany({ user: userId, type: 'refresh' });
 };
 
 module.exports = {
