@@ -1,11 +1,11 @@
-const sendGridMail = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 const { email: emailConfig } = require('../config/config');
 
-sendGridMail.setApiKey(emailConfig.sendgridApiKey);
+const transporter = nodemailer.createTransport(emailConfig);
 
 const sendEmail = async (to, subject, text) => {
   const msg = { from: emailConfig.fromEmail, to, subject, text };
-  await sendGridMail.send(msg);
+  await transporter.sendMail(msg);
 };
 
 const sendResetPasswordEmail = async (to, token, baseUrl) => {

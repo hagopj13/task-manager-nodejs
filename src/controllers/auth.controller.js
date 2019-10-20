@@ -36,8 +36,8 @@ const logoutAll = catchAsync(async (req, res) => {
 const forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.body;
   const resetPasswordToken = await authService.forgotPassword(email);
+  await emailService.sendResetPasswordEmail(email, resetPasswordToken, req.baseUrl);
   res.status(httpStatus.NO_CONTENT).send();
-  emailService.sendResetPasswordEmail(email, resetPasswordToken, req.baseUrl);
 });
 
 const resetPassword = catchAsync(async (req, res) => {
