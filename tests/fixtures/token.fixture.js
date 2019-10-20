@@ -13,7 +13,16 @@ const userOneRefreshToken = {
   expires: refreshTokenExpires.toDate(),
 };
 
+const resetPasswordTokenExpires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
+const userOneResetPasswordToken = {
+  token: generateToken(userOne._id, resetPasswordTokenExpires),
+  user: userOne._id,
+  type: 'resetPassword',
+  expires: resetPasswordTokenExpires.toDate(),
+};
+
 const allRefreshTokens = [userOneRefreshToken];
+const allResetPasswordTokens = [userOneResetPasswordToken];
 
 const insertToken = async token => {
   await Token.create(token);
@@ -23,9 +32,15 @@ const insertAllRefreshTokens = async () => {
   await Token.insertMany(allRefreshTokens);
 };
 
+const insertAllResetPasswordTokens = async () => {
+  await Token.insertMany(allResetPasswordTokens);
+};
+
 module.exports = {
   userOneRefreshToken,
   allRefreshTokens,
+  allResetPasswordTokens,
   insertToken,
   insertAllRefreshTokens,
+  insertAllResetPasswordTokens,
 };
