@@ -38,6 +38,7 @@ const insertAllResetPasswordTokens = async () => {
 
 module.exports = {
   userOneRefreshToken,
+  userOneResetPasswordToken,
   allRefreshTokens,
   allResetPasswordTokens,
   insertToken,

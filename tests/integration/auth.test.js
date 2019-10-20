@@ -4,6 +4,7 @@ const httpStatus = require('http-status');
 const httpMocks = require('node-mocks-http');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const bcrypt = require('bcryptjs');
 const { omit, set } = require('lodash');
 const request = require('../utils/testRequest');
 const { User, Token } = require('../../src/models');
@@ -16,7 +17,7 @@ const { checkResponseTokens, checkResponseUser } = require('../utils/checkRespon
 const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
 const { userOne, userOneAccessToken, adminAccessToken, insertAllUsers } = require('../fixtures/user.fixture');
-const { userOneRefreshToken, insertToken } = require('../fixtures/token.fixture');
+const { userOneRefreshToken, userOneResetPasswordToken, insertToken } = require('../fixtures/token.fixture');
 
 describe('Auth Route', () => {
   let reqBody;
@@ -69,10 +70,7 @@ describe('Auth Route', () => {
       { body: omit(reqBody, 'email'), message: 'email is missing' },
       { body: set(reqBody, 'email', 'notValid'), message: 'email is invalid' },
       { body: omit(reqBody, 'password'), message: 'password is missing' },
-      {
-        body: set(reqBody, 'password', 'myPassword'),
-        message: 'password contains the word password',
-      },
+      { body: set(reqBody, 'password', 'myPassword'), message: 'password contains the word password' },
       { body: set(reqBody, 'password', 'short'), message: 'password is shorter than 8 characters' },
       { body: omit(reqBody, 'name'), message: 'name is missing' },
       { body: set(reqBody, 'age', -1), message: 'age is less than 0' },
@@ -200,8 +198,7 @@ describe('Auth Route', () => {
     });
 
     const generateAndSaveRefreshToken = async () => {
-      reqBody = { refreshToken: generateToken(userId, refreshTokenExpires) };
-
+      reqBody.refreshToken = generateToken(userId, refreshTokenExpires);
       const refreshToken = {
         token: reqBody.refreshToken,
         user: userId,
@@ -253,14 +250,107 @@ describe('Auth Route', () => {
       const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
-      const dbRefreshTokenCount = await Token.countDocuments({
-        user: userOne._id,
-        type: 'refresh',
-      });
+      const dbRefreshTokenCount = await Token.countDocuments({ user: userOne._id, type: 'refresh' });
       expect(dbRefreshTokenCount).to.be.equal(0);
     });
 
     testMissingAccessToken(getReqConfig);
+  });
+
+  describe('POST /v1/auth/resetPassword', () => {
+    let reqQuery;
+    let userId;
+    let resetPasswordTokenExpires;
+    let blacklisted;
+
+    beforeEach(async () => {
+      await insertToken(userOneResetPasswordToken);
+      userId = userOne._id;
+      resetPasswordTokenExpires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
+      blacklisted = false;
+      reqQuery = { token: userOneResetPasswordToken.token };
+      reqBody = { password: 'newPass123!' };
+    });
+
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/resetPassword',
+        query: reqQuery,
+        body: reqBody,
+      };
+    };
+
+    it('should successfully reset the password and return 204 if the reset password token is valid', async () => {
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      const dbUser = await User.findById(userId);
+      const isNewPassword = await bcrypt.compare(reqBody.password, dbUser.password);
+      expect(isNewPassword).to.be.true;
+    });
+
+    it('should delete all refresh and reset password tokens after successful reset', async () => {
+      await request(getReqConfig());
+
+      const dbResetPasswordTokenCount = await Token.countDocuments({ user: userOne._id, type: 'resetPassword' });
+      expect(dbResetPasswordTokenCount).to.be.equal(0);
+
+      const dbRefreshTokenCount = await Token.countDocuments({ user: userOne._id, type: 'refresh' });
+      expect(dbRefreshTokenCount).to.be.equal(0);
+    });
+
+    it('should return a 400 error if the reset password token is missing', async () => {
+      delete reqQuery.token;
+      const response = await request(getReqConfig());
+      checkValidationError(response);
+    });
+
+    const bodyValidationTestCases = [
+      { body: omit(reqBody, 'password'), message: 'password is missing' },
+      { body: set(reqBody, 'password', 'myPassword'), message: 'password contains the word password' },
+      { body: set(reqBody, 'password', 'short'), message: 'password is shorter than 8 characters' },
+    ];
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
+
+    const generateAndSaveResetPasswordToken = async () => {
+      reqQuery.token = generateToken(userId, resetPasswordTokenExpires);
+      const resetPasswordToken = {
+        token: reqQuery.token,
+        user: userId,
+        type: 'resetPassword',
+        expires: resetPasswordTokenExpires.toDate(),
+        blacklisted,
+      };
+      await insertToken(resetPasswordToken);
+    };
+
+    const checkResetPasswordError = response => {
+      expect(response.status).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(response.data.code).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(response.data.message).to.be.equal('Password reset failed');
+    };
+
+    it('should return a 401 error if the reset password token is blacklisted', async () => {
+      blacklisted = true;
+      await generateAndSaveResetPasswordToken();
+      const response = await request(getReqConfig());
+      checkResetPasswordError(response);
+    });
+
+    it('should return a 401 error if the reset password token is expired', async () => {
+      resetPasswordTokenExpires.subtract(jwtConfig.resetPasswordExpirationMinutes + 1, 'minutes');
+      await generateAndSaveResetPasswordToken();
+      const response = await request(getReqConfig());
+      checkResetPasswordError(response);
+    });
+
+    it('should return a 401 error if user is not found', async () => {
+      userId = mongoose.Types.ObjectId();
+      await generateAndSaveResetPasswordToken();
+      const response = await request(getReqConfig());
+      checkResetPasswordError(response);
+    });
   });
 
   describe('Auth middleware', () => {
