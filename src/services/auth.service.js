@@ -66,11 +66,12 @@ const deleteUserResetPasswordTokens = async userId => {
 };
 
 const forgotPassword = async email => {
-  const user = userService.getUserByEmail(email);
+  const user = await userService.getUserByEmail(email);
   await deleteUserResetPasswordTokens(user._id);
   const expires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
   const resetPasswordToken = tokenService.generateToken(user._id, expires);
   await tokenService.saveToken(resetPasswordToken, user._id, expires, 'resetPassword');
+  return resetPasswordToken;
 };
 
 const resetPassword = async (resetPasswordToken, newPassword) => {

@@ -53,7 +53,7 @@ const getUsers = async query => {
 const getUserByEmail = async email => {
   const user = await User.findOne({ email });
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'No users found with this email');
+    throw new AppError(httpStatus.NOT_FOUND, 'No user found with this email');
   }
   return user;
 };

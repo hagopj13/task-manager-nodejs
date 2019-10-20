@@ -29,8 +29,8 @@ const forgotPassword = {
 };
 
 const resetPassword = {
-  params: Joi.object().keys({
-    resetPasswordToken: Joi.string().required(),
+  query: Joi.object().keys({
+    token: Joi.string().required(),
   }),
   body: Joi.object().keys({
     password: Joi.string().min(8).regex(/^((?!password).)*$/im).required(),

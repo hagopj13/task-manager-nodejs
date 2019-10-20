@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const { userService, authService } = require('../services');
+const { userService, authService, emailService } = require('../services');
 const { catchAsync } = require('../utils/controller.util');
 
 const register = catchAsync(async (req, res) => {
@@ -34,12 +34,14 @@ const logoutAll = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-  await authService.forgotPassword(req.body.email);
+  const { email } = req.body;
+  const resetPasswordToken = await authService.forgotPassword(email);
   res.status(httpStatus.NO_CONTENT).send();
+  emailService.sendResetPasswordEmail(email, resetPasswordToken, req.baseUrl);
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  await authService.resetPassword(req.params.resetPasswordToken, req.body.password);
+  await authService.resetPassword(req.query.token, req.body.password);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
