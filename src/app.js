@@ -41,7 +41,9 @@ app.options('*', cors());
 app.use(passport.initialize());
 passport.use('jwt', jwtStrategy);
 
-app.use('/v1/auth', authLimiter);
+if (env === 'production') {
+  app.use('/v1/auth', authLimiter);
+}
 app.use('/v1', routes);
 
 app.use(notFoundError);
