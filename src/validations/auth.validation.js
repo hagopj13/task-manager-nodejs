@@ -16,14 +16,31 @@ const login = {
   }),
 };
 
-const refreshToken = {
+const refreshTokens = {
   body: Joi.object().keys({
     refreshToken: Joi.string().required(),
+  }),
+};
+
+const forgotPassword = {
+  body: Joi.object().keys({
+    email: Joi.string().email().required(),
+  }),
+};
+
+const resetPassword = {
+  query: Joi.object().keys({
+    token: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    password: Joi.string().min(8).regex(/^((?!password).)*$/im).required(),
   }),
 };
 
 module.exports = {
   register,
   login,
-  refreshToken,
+  refreshTokens,
+  forgotPassword,
+  resetPassword,
 };

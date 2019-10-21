@@ -4,31 +4,28 @@ const httpStatus = require('http-status');
 const httpMocks = require('node-mocks-http');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const bcrypt = require('bcryptjs');
 const { omit, set } = require('lodash');
 const request = require('../utils/testRequest');
-const { User, RefreshToken } = require('../../src/models');
+const { User, Token } = require('../../src/models');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
-const { generateToken } = require('../../src/utils/auth.util');
+const { generateToken } = require('../../src/services/token.service');
+const emailService = require('../../src/services/email.service');
 const { AppError } = require('../../src/utils/error.util');
-const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
+const { checkValidationError, checkUnauthorizedError, checkNotFoundError } = require('../utils/checkError');
 const { checkResponseTokens, checkResponseUser } = require('../utils/checkResponse');
 const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
-const {
-  userOne,
-  userOneAccessToken,
-  adminAccessToken,
-  insertAllUsers,
-} = require('../fixtures/user.fixture');
-const { userOneRefreshToken, insertRefreshToken } = require('../fixtures/refreshToken.fixture');
+const { userOne, userOneAccessToken, adminAccessToken, insertAllUsers } = require('../fixtures/user.fixture');
+const { userOneRefreshToken, userOneResetPasswordToken, insertToken } = require('../fixtures/token.fixture');
 
 describe('Auth Route', () => {
   let reqBody;
   beforeEach(async () => {
     await clearDatabase();
     await insertAllUsers();
-    await insertRefreshToken(userOneRefreshToken);
+    await insertToken(userOneRefreshToken);
   });
 
   describe('POST /v1/auth/register', () => {
@@ -74,10 +71,7 @@ describe('Auth Route', () => {
       { body: omit(reqBody, 'email'), message: 'email is missing' },
       { body: set(reqBody, 'email', 'notValid'), message: 'email is invalid' },
       { body: omit(reqBody, 'password'), message: 'password is missing' },
-      {
-        body: set(reqBody, 'password', 'myPassword'),
-        message: 'password contains the word password',
-      },
+      { body: set(reqBody, 'password', 'myPassword'), message: 'password contains the word password' },
       { body: set(reqBody, 'password', 'short'), message: 'password is shorter than 8 characters' },
       { body: omit(reqBody, 'name'), message: 'name is missing' },
       { body: set(reqBody, 'age', -1), message: 'age is less than 0' },
@@ -150,7 +144,7 @@ describe('Auth Route', () => {
     });
   });
 
-  describe('POST /v1/auth/refreshToken', () => {
+  describe('POST /v1/auth/refreshTokens', () => {
     let userId;
     let refreshTokenExpires;
     let blacklisted;
@@ -165,7 +159,7 @@ describe('Auth Route', () => {
     const getReqConfig = () => {
       return {
         method: 'POST',
-        url: '/v1/auth/refreshToken',
+        url: '/v1/auth/refreshTokens',
         body: reqBody,
       };
     };
@@ -175,7 +169,7 @@ describe('Auth Route', () => {
       expect(response.status).to.be.equal(httpStatus.OK);
       checkResponseTokens(response.data);
 
-      const dbRefreshToken = await RefreshToken.findOne({
+      const dbRefreshToken = await Token.findOne({
         token: response.data.refreshToken.token,
       });
       expect(dbRefreshToken).to.be.ok;
@@ -185,13 +179,11 @@ describe('Auth Route', () => {
 
     it('should delete the old refresh token after creating a new one', async () => {
       await request(getReqConfig());
-      const oldRefreshToken = await RefreshToken.findOne({ token: userOneRefreshToken.token });
+      const oldRefreshToken = await Token.findOne({ token: userOneRefreshToken.token });
       expect(oldRefreshToken).not.to.be.ok;
     });
 
-    const bodyValidationTestCases = [
-      { body: omit(reqBody, 'refreshToken'), message: 'refreshToken is missing' },
-    ];
+    const bodyValidationTestCases = [{ body: omit(reqBody, 'refreshToken'), message: 'refreshToken is missing' }];
     testBodyValidation(getReqConfig, bodyValidationTestCases);
 
     it('should return a 401 error if the refresh token is signed by an invalid secret', async () => {
@@ -207,15 +199,15 @@ describe('Auth Route', () => {
     });
 
     const generateAndSaveRefreshToken = async () => {
-      reqBody = { refreshToken: generateToken(userId, refreshTokenExpires) };
-
+      reqBody.refreshToken = generateToken(userId, refreshTokenExpires);
       const refreshToken = {
         token: reqBody.refreshToken,
         user: userId,
-        expires: refreshTokenExpires,
+        type: 'refresh',
+        expires: refreshTokenExpires.toDate(),
         blacklisted,
       };
-      await insertRefreshToken(refreshToken);
+      await insertToken(refreshToken);
     };
 
     it('should return a 401 error if the refresh token is blacklisted', async () => {
@@ -259,11 +251,157 @@ describe('Auth Route', () => {
       const response = await request(getReqConfig());
       expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
 
-      const dbRefreshTokenCount = await RefreshToken.countDocuments({ user: userOne._id });
+      const dbRefreshTokenCount = await Token.countDocuments({ user: userOne._id, type: 'refresh' });
       expect(dbRefreshTokenCount).to.be.equal(0);
     });
 
     testMissingAccessToken(getReqConfig);
+  });
+
+  describe('POST /v1/auth/forgetPassword', () => {
+    let sendResetPasswordEmailSpy;
+    let transporterStub;
+
+    beforeEach(() => {
+      reqBody = { email: userOne.email };
+      sendResetPasswordEmailSpy = sinon.spy(emailService, 'sendResetPasswordEmail');
+      transporterStub = sinon.stub(emailService.transporter, 'sendMail').resolves();
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/forgotPassword',
+        body: reqBody,
+      };
+    };
+
+    it('should successfully return 204 response and send a reset password email to the user', async () => {
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      expect(sendResetPasswordEmailSpy.calledOnce).to.be.true;
+      const { args } = sendResetPasswordEmailSpy.firstCall;
+      expect(args).to.have.lengthOf(3);
+      expect(args[0]).to.be.equal(reqBody.email);
+      expect(transporterStub.calledOnce).to.be.true;
+
+      const dbResetPasswordTokens = await Token.find({ user: userOne._id, type: 'resetPassword' });
+      expect(dbResetPasswordTokens).to.have.lengthOf(1);
+      expect(dbResetPasswordTokens[0].token).to.be.equal(args[1]);
+    });
+
+    const bodyValidationTestCases = [
+      { body: omit(reqBody, 'email'), message: 'email is missing' },
+      { body: set(reqBody, 'email', 'invalidEmail'), message: 'email must be valid' },
+    ];
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
+
+    it('should return a 404 error if the email does not belong to any user', async () => {
+      reqBody.email = 'unknownEmail@example.com';
+      const response = await request(getReqConfig());
+      checkNotFoundError(response);
+    });
+  });
+
+  describe('POST /v1/auth/resetPassword', () => {
+    let reqQuery;
+    let userId;
+    let resetPasswordTokenExpires;
+    let blacklisted;
+
+    beforeEach(async () => {
+      await insertToken(userOneResetPasswordToken);
+      userId = userOne._id;
+      resetPasswordTokenExpires = moment().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
+      blacklisted = false;
+      reqQuery = { token: userOneResetPasswordToken.token };
+      reqBody = { password: 'newPass123!' };
+    });
+
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/resetPassword',
+        query: reqQuery,
+        body: reqBody,
+      };
+    };
+
+    it('should successfully reset the password and return 204 if the reset password token is valid', async () => {
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      const dbUser = await User.findById(userId);
+      const isNewPassword = await bcrypt.compare(reqBody.password, dbUser.password);
+      expect(isNewPassword).to.be.true;
+    });
+
+    it('should delete all refresh and reset password tokens after successful reset', async () => {
+      await request(getReqConfig());
+
+      const dbResetPasswordTokenCount = await Token.countDocuments({ user: userOne._id, type: 'resetPassword' });
+      expect(dbResetPasswordTokenCount).to.be.equal(0);
+
+      const dbRefreshTokenCount = await Token.countDocuments({ user: userOne._id, type: 'refresh' });
+      expect(dbRefreshTokenCount).to.be.equal(0);
+    });
+
+    it('should return a 400 error if the reset password token is missing', async () => {
+      delete reqQuery.token;
+      const response = await request(getReqConfig());
+      checkValidationError(response);
+    });
+
+    const bodyValidationTestCases = [
+      { body: omit(reqBody, 'password'), message: 'password is missing' },
+      { body: set(reqBody, 'password', 'myPassword'), message: 'password contains the word password' },
+      { body: set(reqBody, 'password', 'short'), message: 'password is shorter than 8 characters' },
+    ];
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
+
+    const generateAndSaveResetPasswordToken = async () => {
+      reqQuery.token = generateToken(userId, resetPasswordTokenExpires);
+      const resetPasswordToken = {
+        token: reqQuery.token,
+        user: userId,
+        type: 'resetPassword',
+        expires: resetPasswordTokenExpires.toDate(),
+        blacklisted,
+      };
+      await insertToken(resetPasswordToken);
+    };
+
+    const checkResetPasswordError = response => {
+      expect(response.status).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(response.data.code).to.be.equal(httpStatus.UNAUTHORIZED);
+      expect(response.data.message).to.be.equal('Password reset failed');
+    };
+
+    it('should return a 401 error if the reset password token is blacklisted', async () => {
+      blacklisted = true;
+      await generateAndSaveResetPasswordToken();
+      const response = await request(getReqConfig());
+      checkResetPasswordError(response);
+    });
+
+    it('should return a 401 error if the reset password token is expired', async () => {
+      resetPasswordTokenExpires.subtract(jwtConfig.resetPasswordExpirationMinutes + 1, 'minutes');
+      await generateAndSaveResetPasswordToken();
+      const response = await request(getReqConfig());
+      checkResetPasswordError(response);
+    });
+
+    it('should return a 401 error if user is not found', async () => {
+      userId = mongoose.Types.ObjectId();
+      await generateAndSaveResetPasswordToken();
+      const response = await request(getReqConfig());
+      checkResetPasswordError(response);
+    });
   });
 
   describe('Auth middleware', () => {
@@ -282,6 +420,10 @@ describe('Auth Route', () => {
       userId = userOne._id.toHexString();
       expires = moment().add(jwtConfig.accessExpirationMinutes, 'minutes');
       requiredRights = [];
+    });
+
+    afterEach(() => {
+      sinon.restore();
     });
 
     const exec = async () => {

@@ -16,19 +16,8 @@ const {
   testInvalidParamId,
 } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
-const {
-  userOne,
-  userOneAccessToken,
-  adminAccessToken,
-  insertAllUsers,
-} = require('../fixtures/user.fixture');
-const {
-  taskOne,
-  taskFour,
-  userOneTasks,
-  allTasks,
-  insertAllTasks,
-} = require('../fixtures/task.fixture');
+const { userOne, userOneAccessToken, adminAccessToken, insertAllUsers } = require('../fixtures/user.fixture');
+const { taskOne, taskFour, userOneTasks, allTasks, insertAllTasks } = require('../fixtures/task.fixture');
 
 describe('Task Route', () => {
   let accessToken;

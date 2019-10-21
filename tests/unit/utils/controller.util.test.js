@@ -19,6 +19,10 @@ describe('Contoller middleware tests', () => {
       defaultStatusCode = undefined;
     });
 
+    afterEach(() => {
+      sinon.restore();
+    });
+
     it('should not call next if no errors occur', async () => {
       const fn = () => Promise.resolve();
       const asyncController = catchAsync(fn);

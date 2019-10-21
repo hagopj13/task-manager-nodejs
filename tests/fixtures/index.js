@@ -1,8 +1,8 @@
-const { User, RefreshToken, Task } = require('../../src/models');
+const { User, Token, Task } = require('../../src/models');
 
 const clearDatabase = async () => {
   await User.deleteMany();
-  await RefreshToken.deleteMany();
+  await Token.deleteMany();
   await Task.deleteMany();
 };
 

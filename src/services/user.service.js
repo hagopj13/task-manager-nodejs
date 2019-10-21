@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const { AppError } = require('../utils/error.util');
@@ -28,7 +27,9 @@ const getUser = async userId => {
 
 const updateUser = async (userId, updateBody) => {
   const user = await getUser(userId);
-  await checkDuplicateEmail(updateBody.email, userId);
+  if (updateBody.email) {
+    await checkDuplicateEmail(updateBody.email, userId);
+  }
   Object.keys(updateBody).forEach(update => (user[update] = updateBody[update]));
   await user.save();
   return user;
@@ -41,18 +42,6 @@ const deleteUser = async userId => {
   return user;
 };
 
-const loginUser = async (email, password) => {
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
-  }
-  const isPasswordMatch = await bcrypt.compare(password, user.password);
-  if (!isPasswordMatch) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
-  }
-  return user;
-};
-
 const getUsers = async query => {
   const filter = pick(query, ['name', 'role']);
   const options = getQueryOptions(query);
@@ -61,11 +50,19 @@ const getUsers = async query => {
   return users;
 };
 
+const getUserByEmail = async email => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'No user found with this email');
+  }
+  return user;
+};
+
 module.exports = {
   createUser,
   getUser,
   updateUser,
   deleteUser,
-  loginUser,
   getUsers,
+  getUserByEmail,
 };

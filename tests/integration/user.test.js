@@ -3,11 +3,7 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const request = require('../utils/testRequest');
 const { User, Task } = require('../../src/models');
-const {
-  checkValidationError,
-  checkForbiddenError,
-  checkNotFoundError,
-} = require('../utils/checkError');
+const { checkValidationError, checkForbiddenError, checkNotFoundError } = require('../utils/checkError');
 const { checkResponseUser } = require('../utils/checkResponse');
 const {
   testMissingAccessToken,

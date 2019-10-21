@@ -18,8 +18,17 @@ const envirnomentVariables = {
   mongodbUrl: getMongodbUrl(),
   jwt: {
     secret: process.env.JWT_SECRET,
-    accessExpirationMinutes: process.env.JWT_ACCESS_EXPIRATION_MINUTES,
-    refreshExpirationDays: process.env.JWT_REFRESH_EXPIRATION_DAYS,
+    accessExpirationMinutes: parseInt(process.env.JWT_ACCESS_EXPIRATION_MINUTES, 10),
+    refreshExpirationDays: parseInt(process.env.JWT_REFRESH_EXPIRATION_DAYS, 10),
+    resetPasswordExpirationMinutes: 10,
+  },
+  email: {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
   },
 };
 

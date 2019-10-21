@@ -60,22 +60,12 @@ describe('Error middleware tests', () => {
 
     it('should convert an object to AppError with status 500 and its default message', () => {
       const error = {};
-      testErrorConversion(
-        error,
-        httpStatus.INTERNAL_SERVER_ERROR,
-        httpStatus[httpStatus.INTERNAL_SERVER_ERROR],
-        false
-      );
+      testErrorConversion(error, httpStatus.INTERNAL_SERVER_ERROR, httpStatus[httpStatus.INTERNAL_SERVER_ERROR], false);
     });
 
     it('should convert a string to AppError with status 500 and its default message', () => {
       const error = 'any message';
-      testErrorConversion(
-        error,
-        httpStatus.INTERNAL_SERVER_ERROR,
-        httpStatus[httpStatus.INTERNAL_SERVER_ERROR],
-        false
-      );
+      testErrorConversion(error, httpStatus.INTERNAL_SERVER_ERROR, httpStatus[httpStatus.INTERNAL_SERVER_ERROR], false);
     });
   });
 
@@ -92,6 +82,10 @@ describe('Error middleware tests', () => {
       req = httpMocks.createRequest();
       res = httpMocks.createResponse();
       sendSpy = sinon.spy(res, 'send');
+    });
+
+    afterEach(() => {
+      sinon.restore();
     });
 
     const checkErrorResponse = expectedResponse => {
