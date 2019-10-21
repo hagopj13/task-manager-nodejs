@@ -11,8 +11,9 @@ const { User, Token } = require('../../src/models');
 const { jwt: jwtConfig } = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
 const { generateToken } = require('../../src/services/token.service');
+const emailService = require('../../src/services/email.service');
 const { AppError } = require('../../src/utils/error.util');
-const { checkValidationError, checkUnauthorizedError } = require('../utils/checkError');
+const { checkValidationError, checkUnauthorizedError, checkNotFoundError } = require('../utils/checkError');
 const { checkResponseTokens, checkResponseUser } = require('../utils/checkResponse');
 const { testMissingAccessToken, testBodyValidation } = require('../utils/commonTests');
 const { clearDatabase } = require('../fixtures');
@@ -255,6 +256,56 @@ describe('Auth Route', () => {
     });
 
     testMissingAccessToken(getReqConfig);
+  });
+
+  describe('POST /v1/auth/forgetPassword', () => {
+    let sendResetPasswordEmailSpy;
+    let transporterStub;
+
+    beforeEach(() => {
+      reqBody = { email: userOne.email };
+      sendResetPasswordEmailSpy = sinon.spy(emailService, 'sendResetPasswordEmail');
+      transporterStub = sinon.stub(emailService.transporter, 'sendMail').resolves();
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    const getReqConfig = () => {
+      return {
+        method: 'POST',
+        url: '/v1/auth/forgotPassword',
+        body: reqBody,
+      };
+    };
+
+    it('should successfully return 204 response and send a reset password email to the user', async () => {
+      const response = await request(getReqConfig());
+      expect(response.status).to.be.equal(httpStatus.NO_CONTENT);
+
+      expect(sendResetPasswordEmailSpy.calledOnce).to.be.true;
+      const { args } = sendResetPasswordEmailSpy.firstCall;
+      expect(args).to.have.lengthOf(3);
+      expect(args[0]).to.be.equal(reqBody.email);
+      expect(transporterStub.calledOnce).to.be.true;
+
+      const dbResetPasswordTokens = await Token.find({ user: userOne._id, type: 'resetPassword' });
+      expect(dbResetPasswordTokens).to.have.lengthOf(1);
+      expect(dbResetPasswordTokens[0].token).to.be.equal(args[1]);
+    });
+
+    const bodyValidationTestCases = [
+      { body: omit(reqBody, 'email'), message: 'email is missing' },
+      { body: set(reqBody, 'email', 'invalidEmail'), message: 'email must be valid' },
+    ];
+    testBodyValidation(getReqConfig, bodyValidationTestCases);
+
+    it('should return a 404 error if the email does not belong to any user', async () => {
+      reqBody.email = 'unknownEmail@example.com';
+      const response = await request(getReqConfig());
+      checkNotFoundError(response);
+    });
   });
 
   describe('POST /v1/auth/resetPassword', () => {

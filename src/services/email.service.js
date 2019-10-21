@@ -17,6 +17,7 @@ const sendResetPasswordEmail = async (to, token, baseUrl) => {
 };
 
 module.exports = {
+  transporter,
   sendEmail,
   sendResetPasswordEmail,
 };
