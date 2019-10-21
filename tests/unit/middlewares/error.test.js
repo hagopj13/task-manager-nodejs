@@ -84,6 +84,10 @@ describe('Error middleware tests', () => {
       sendSpy = sinon.spy(res, 'send');
     });
 
+    afterEach(() => {
+      sinon.restore();
+    });
+
     const checkErrorResponse = expectedResponse => {
       expect(sendSpy.calledOnce).to.be.true;
       const response = sendSpy.firstCall.args[0];

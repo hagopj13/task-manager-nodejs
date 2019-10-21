@@ -371,6 +371,10 @@ describe('Auth Route', () => {
       requiredRights = [];
     });
 
+    afterEach(() => {
+      sinon.restore();
+    });
+
     const exec = async () => {
       req = httpMocks.createRequest({
         headers: {
