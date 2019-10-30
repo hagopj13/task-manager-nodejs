@@ -62,7 +62,6 @@
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {
-    "ajv": "^5.0.0",
     "axiosist": "^0.7.0",
     "chai": "^4.2.0",
     "codacy-coverage": "^3.4.0",
